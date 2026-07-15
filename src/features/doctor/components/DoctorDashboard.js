@@ -4,6 +4,8 @@ import DoctorPatientsTab from '../pages/Patients/DoctorPatientsTab';
 import DoctorAppointmentsTab from '../pages/Appointments/DoctorAppointmentsTab';
 import DoctorLabResultsTab from '../pages/LabResults/DoctorLabResultsTab';
 import DoctorPharmacyTab from '../pages/Pharmacy/DoctorPharmacyTab';
+import DoctorClinicalNotesTab from '../pages/ClinicalNotes/DoctorClinicalNotesTab';
+import DoctorBillingTab from '../pages/Billing/DoctorBillingTab';
 import DoctorSettingsTab from '../pages/Settings/DoctorSettingsTab';
 
 const translations = {
@@ -13,6 +15,8 @@ const translations = {
     appointments: 'Quản lý lịch hẹn',
     labResults: 'Kết quả xét nghiệm',
     pharmacy: 'Kê đơn thuốc',
+    clinicalNotes: 'Ghi chú lâm sàng',
+    billing: 'Chi phí điều trị',
     settings: 'Cài đặt hệ thống',
     clinicalPortal: 'Cổng lâm sàng',
     newConsultation: 'Khám lâm sàng mới',
@@ -27,6 +31,8 @@ const translations = {
     appointments: 'Appointments',
     labResults: 'Lab Results',
     pharmacy: 'Pharmacy',
+    clinicalNotes: 'Clinical Notes',
+    billing: 'Billing Summary',
     settings: 'Settings',
     clinicalPortal: 'Clinical Portal',
     newConsultation: 'New Consultation',
@@ -594,6 +600,8 @@ export default function DoctorDashboard({ onNavigate, theme: propTheme, setTheme
             { label: 'Appointments', key: 'appointments', icon: 'calendar_today' },
             { label: 'Lab Results', key: 'labResults', icon: 'biotech' },
             { label: 'Pharmacy', key: 'pharmacy', icon: 'medical_services' },
+            { label: 'Clinical Notes', key: 'clinicalNotes', icon: 'edit_note' },
+            { label: 'Billing', key: 'billing', icon: 'receipt_long' },
             { label: 'Settings', key: 'settings', icon: 'settings' }
           ].map((item) => {
             const isActive = activeTab === item.label;
@@ -821,6 +829,22 @@ export default function DoctorDashboard({ onNavigate, theme: propTheme, setTheme
             />
           )}
 
+          {activeTab === 'Clinical Notes' && (
+            <DoctorClinicalNotesTab
+              lang={lang}
+              t={t}
+              patients={patients}
+            />
+          )}
+
+          {activeTab === 'Billing' && (
+            <DoctorBillingTab
+              lang={lang}
+              t={t}
+              patients={patients}
+            />
+          )}
+
           {activeTab === 'Settings' && (
             <DoctorSettingsTab
               lang={lang}
@@ -844,7 +868,7 @@ export default function DoctorDashboard({ onNavigate, theme: propTheme, setTheme
           )}
 
           {/* Simple Placeholders for other tabs */}
-          {activeTab !== 'Dashboard' && activeTab !== 'Patients' && activeTab !== 'Appointments' && activeTab !== 'Lab Results' && activeTab !== 'Pharmacy' && activeTab !== 'Settings' && (
+          {activeTab !== 'Dashboard' && activeTab !== 'Patients' && activeTab !== 'Appointments' && activeTab !== 'Lab Results' && activeTab !== 'Pharmacy' && activeTab !== 'Clinical Notes' && activeTab !== 'Billing' && activeTab !== 'Settings' && (
             <div className="bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 rounded-xl p-xl shadow-sm text-center min-h-[400px] flex flex-col items-center justify-center space-y-md">
               <span className="material-symbols-outlined text-[64px] text-primary dark:text-primary-fixed-dim animate-pulse">
                 construction

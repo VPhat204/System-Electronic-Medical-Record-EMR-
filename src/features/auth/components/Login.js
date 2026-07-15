@@ -47,6 +47,8 @@ export default function Login({ onNavigate }) {
           onNavigate('receptionist-dashboard');
         } else if (lowerId.includes('pharmacist') || lowerId.includes('duocsi') || lowerId.includes('duoc si')) {
           onNavigate('pharmacist-dashboard');
+        } else if (lowerId.includes('nurse') || lowerId.includes('yta') || lowerId.includes('y ta') || lowerId.includes('dieuduong') || lowerId.includes('dieu duong')) {
+          onNavigate('nurse-dashboard');
         } else {
           onNavigate('patient-dashboard');
         }

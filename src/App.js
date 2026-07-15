@@ -19,6 +19,7 @@ import ReceptionistDashboard from './features/receptionist/components/Receptioni
 import AdminDashboard from './features/admin/components/AdminDashboard';
 import PatientDashboard from './features/patient/components/PatientDashboard';
 import PharmacistDashboard from './features/pharmacist/components/PharmacistDashboard';
+import NurseDashboard from './features/nurse/components/NurseDashboard';
 import NotFound from './features/errors/components/NotFound';
 import './App.css';
 
@@ -48,6 +49,8 @@ function App() {
     if (hash === '#receptionist-dashboard') return 'receptionist-dashboard';
     if (hash === '#admin-dashboard') return 'admin-dashboard';
     if (hash === '#patient-dashboard') return 'patient-dashboard';
+    if (hash === '#pharmacist-dashboard') return 'pharmacist-dashboard';
+    if (hash === '#nurse-dashboard') return 'nurse-dashboard';
     return 'home';
   });
 
@@ -92,6 +95,8 @@ function App() {
         setCurrentPage('patient-dashboard');
       } else if (hash === '#pharmacist-dashboard') {
         setCurrentPage('pharmacist-dashboard');
+      } else if (hash === '#nurse-dashboard') {
+        setCurrentPage('nurse-dashboard');
       } else {
         setCurrentPage('home');
       }
@@ -178,6 +183,10 @@ function App() {
 
   if (currentPage === 'pharmacist-dashboard') {
     return <PharmacistDashboard onNavigate={handleNavigate} theme={theme} setTheme={setTheme} />;
+  }
+  
+  if (currentPage === 'nurse-dashboard') {
+    return <NurseDashboard onNavigate={handleNavigate} theme={theme} setTheme={setTheme} />;
   }
 
   // Render 404 Page if routed

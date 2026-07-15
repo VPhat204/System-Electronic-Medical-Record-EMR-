@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import PharmacistDashboardTab from '../pages/Dashboard/PharmacistDashboardTab';
 import PharmacistPatientsTab from '../pages/Patients/PharmacistPatientsTab';
-import PharmacistAppointmentsTab from '../pages/Appointments/PharmacistAppointmentsTab';
+import PharmacistPendingRxTab from '../pages/PendingPrescriptions/PharmacistPendingRxTab';
 import PharmacistLabResultsTab from '../pages/LabResults/PharmacistLabResultsTab';
+import PharmacistPharmacyTab from '../pages/Pharmacy/PharmacistPharmacyTab';
+import PharmacistSettingsTab from '../pages/Settings/PharmacistSettingsTab';
 
 const translations = {
   vi: {
     dashboard: 'Bảng điều khiển',
     patients: 'Bệnh nhân',
-    appointments: 'Lịch hẹn',
+    pendingPrescriptions: 'Đơn thuốc chờ duyệt',
     labResults: 'Kết quả xét nghiệm',
     pharmacy: 'Nhà thuốc',
     settings: 'Cài đặt',
@@ -56,7 +58,7 @@ const translations = {
   en: {
     dashboard: 'Dashboard',
     patients: 'Patients',
-    appointments: 'Appointments',
+    pendingPrescriptions: 'Pending Prescriptions',
     labResults: 'Lab Results',
     pharmacy: 'Pharmacy',
     settings: 'Settings',
@@ -169,8 +171,9 @@ export default function PharmacistDashboard({ onNavigate, theme: propTheme, setT
           {[
             { label: 'Dashboard', key: 'dashboard', icon: 'dashboard' },
             { label: 'Bệnh nhân', key: 'patients', icon: 'group' },
-            { label: 'Lịch hẹn', key: 'appointments', icon: 'calendar_today' },
+            { label: 'Đơn thuốc chờ duyệt', key: 'pendingPrescriptions', icon: 'prescription' },
             { label: 'Kết quả xét nghiệm', key: 'labResults', icon: 'biotech' },
+            { label: 'Nhà thuốc', key: 'pharmacy', icon: 'inventory_2' },
             { label: 'Cài đặt', key: 'settings', icon: 'settings' }
           ].map((item) => {
             const isActive = activeTab === item.label;
@@ -312,8 +315,8 @@ export default function PharmacistDashboard({ onNavigate, theme: propTheme, setT
             lang={lang} 
             t={t} 
           />
-        ) : activeTab === 'Lịch hẹn' ? (
-          <PharmacistAppointmentsTab 
+        ) : activeTab === 'Đơn thuốc chờ duyệt' ? (
+          <PharmacistPendingRxTab 
             lang={lang} 
             t={t} 
           />
@@ -321,6 +324,14 @@ export default function PharmacistDashboard({ onNavigate, theme: propTheme, setT
           <PharmacistLabResultsTab 
             lang={lang} 
             t={t} 
+          />
+        ) : activeTab === 'Nhà thuốc' ? (
+          <PharmacistPharmacyTab 
+            lang={lang} 
+          />
+        ) : activeTab === 'Cài đặt' ? (
+          <PharmacistSettingsTab 
+            lang={lang} 
           />
         ) : (
           <div className="bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 rounded-xl p-xl shadow-sm text-center min-h-[400px] flex flex-col items-center justify-center space-y-md">

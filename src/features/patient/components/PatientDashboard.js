@@ -5,6 +5,7 @@ import PatientAppointmentsTab from '../pages/Appointments/PatientAppointmentsTab
 import PatientBillingTab from '../pages/Billing/PatientBillingTab';
 import PatientRecordsTab from '../pages/Records/PatientRecordsTab';
 import PatientSettingsTab from '../pages/Settings/PatientSettingsTab';
+import PatientVitalsTab from '../pages/Vitals/PatientVitalsTab';
 
 const translations = {
   vi: {
@@ -13,6 +14,7 @@ const translations = {
     profile: 'Hồ sơ cá nhân',
     appointments: 'Lịch hẹn khám',
     billing: 'Hóa đơn thanh toán',
+    vitals: 'Chỉ số sinh tồn',
     settings: 'Cài đặt cổng bệnh nhân',
     helpCenter: 'Trợ giúp',
     signOut: 'Đăng xuất',
@@ -26,6 +28,7 @@ const translations = {
     profile: 'Personal Profile',
     appointments: 'Appointments',
     billing: 'Billing Invoices',
+    vitals: 'My Vital Signs',
     settings: 'Portal Settings',
     helpCenter: 'Help Center',
     signOut: 'Sign Out',
@@ -109,6 +112,7 @@ export default function PatientDashboard({ onNavigate, theme: propTheme, setThem
             { label: 'Records', key: 'records', icon: 'receipt_long' },
             { label: 'Appointments', key: 'appointments', icon: 'calendar_today' },
             { label: 'Billing', key: 'billing', icon: 'payments' },
+            { label: 'Vitals', key: 'vitals', icon: 'ecg_heart' },
             { label: 'Profile', key: 'profile', icon: 'person' },
             { label: 'Settings', key: 'settings', icon: 'settings' }
           ].map((item) => {
@@ -260,6 +264,13 @@ export default function PatientDashboard({ onNavigate, theme: propTheme, setThem
 
           {activeTab === 'Billing' && (
             <PatientBillingTab 
+              lang={lang} 
+              t={t} 
+            />
+          )}
+
+          {activeTab === 'Vitals' && (
+            <PatientVitalsTab 
               lang={lang} 
               t={t} 
             />
