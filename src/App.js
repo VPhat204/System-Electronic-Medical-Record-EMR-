@@ -2,21 +2,23 @@ import React, { useState, useRef, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Stats from './components/Stats';
-import Services from './features/services/components/Services';
-import Specialists from './features/doctors/components/Specialists';
+import Services from './features/users/pages/serviceUsers/Services';
+import Specialists from './features/users/pages/doctorUsers/Specialists';
 import Insurance from './components/Insurance';
-import ResourceCenter from './features/resource-center/components/ResourceCenter';
+import ResourceCenter from './features/users/pages/blogUsers/ResourceCenter';
 import Footer from './components/Footer';
 import BookingModal from './features/appointments/components/BookingModal';
 import Login from './features/auth/components/Login';
 import Register from './features/auth/components/Register';
-import DoctorsPage from './features/doctors/components/DoctorsPage';
-import ServicesPage from './features/services/components/ServicesPage';
-import InsurancePage from './features/insurance/components/InsurancePage';
-import BlogsPage from './features/resource-center/components/BlogsPage';
-import DoctorDashboard from './features/doctor-dashboard/components/DoctorDashboard';
-import ReceptionistDashboard from './features/receptionist-dashboard/components/ReceptionistDashboard';
-import AdminDashboard from './features/admin-dashboard/components/AdminDashboard';
+import DoctorsPage from './features/users/pages/doctorUsers/DoctorsPage';
+import ServicesPage from './features/users/pages/serviceUsers/ServicesPage';
+import InsurancePage from './features/users/pages/insureUsers/InsurancePage';
+import BlogsPage from './features/users/pages/blogUsers/BlogsPage';
+import DoctorDashboard from './features/doctor/components/DoctorDashboard';
+import ReceptionistDashboard from './features/receptionist/components/ReceptionistDashboard';
+import AdminDashboard from './features/admin/components/AdminDashboard';
+import PatientDashboard from './features/patient/components/PatientDashboard';
+import PharmacistDashboard from './features/pharmacist/components/PharmacistDashboard';
 import NotFound from './features/errors/components/NotFound';
 import './App.css';
 
@@ -45,6 +47,7 @@ function App() {
     if (hash === '#doctor-dashboard') return 'doctor-dashboard';
     if (hash === '#receptionist-dashboard') return 'receptionist-dashboard';
     if (hash === '#admin-dashboard') return 'admin-dashboard';
+    if (hash === '#patient-dashboard') return 'patient-dashboard';
     return 'home';
   });
 
@@ -85,6 +88,10 @@ function App() {
         setCurrentPage('receptionist-dashboard');
       } else if (hash === '#admin-dashboard') {
         setCurrentPage('admin-dashboard');
+      } else if (hash === '#patient-dashboard') {
+        setCurrentPage('patient-dashboard');
+      } else if (hash === '#pharmacist-dashboard') {
+        setCurrentPage('pharmacist-dashboard');
       } else {
         setCurrentPage('home');
       }
@@ -163,6 +170,14 @@ function App() {
 
   if (currentPage === 'admin-dashboard') {
     return <AdminDashboard onNavigate={handleNavigate} theme={theme} setTheme={setTheme} />;
+  }
+
+  if (currentPage === 'patient-dashboard') {
+    return <PatientDashboard onNavigate={handleNavigate} theme={theme} setTheme={setTheme} />;
+  }
+
+  if (currentPage === 'pharmacist-dashboard') {
+    return <PharmacistDashboard onNavigate={handleNavigate} theme={theme} setTheme={setTheme} />;
   }
 
   // Render 404 Page if routed

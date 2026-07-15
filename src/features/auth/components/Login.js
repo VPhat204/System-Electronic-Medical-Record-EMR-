@@ -39,12 +39,16 @@ export default function Login({ onNavigate }) {
       setSuccessMsg(lang === 'EN' ? 'Login successful! Redirecting...' : 'Đăng nhập thành công! Đang chuyển hướng...');
       setTimeout(() => {
         const lowerId = identity.toLowerCase();
-        if (lowerId.includes('doctor')) {
+        if (lowerId.includes('admin')) {
+          onNavigate('admin-dashboard');
+        } else if (lowerId.includes('doctor')) {
           onNavigate('doctor-dashboard');
         } else if (lowerId.includes('receptionist') || lowerId.includes('letan') || lowerId.includes('le tan')) {
           onNavigate('receptionist-dashboard');
+        } else if (lowerId.includes('pharmacist') || lowerId.includes('duocsi') || lowerId.includes('duoc si')) {
+          onNavigate('pharmacist-dashboard');
         } else {
-          onNavigate('home');
+          onNavigate('patient-dashboard');
         }
       }, 1500);
     }, 1500);
