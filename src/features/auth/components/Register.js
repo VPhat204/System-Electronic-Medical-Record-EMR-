@@ -1,6 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+
+import { ToastContext } from '../../../shared/context/ToastContext';
+import { AuthContext } from '../context/AuthContext';
 
 export default function Register({ onNavigate }) {
+  const { register } = useContext(AuthContext);
+  const { success, error } = useContext(ToastContext);
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 3;
 
@@ -33,6 +38,46 @@ export default function Register({ onNavigate }) {
   const [showPassword, setShowPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [provincesList, setProvincesList] = useState([]);
+  const [districtsList, setDistrictsList] = useState([]);
+  const [wardsList, setWardsList] = useState([]);
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/location/provinces')
+      .then(res => res.json())
+      .then(data => setProvincesList(data))
+      .catch(err => console.error('Error fetching provinces:', err));
+  }, []);
+
+  const handleProvinceChange = (provinceName) => {
+    handleInputChange('province', provinceName);
+    setFormData(prev => ({ ...prev, district: '', ward: '' }));
+    setDistrictsList([]);
+    setWardsList([]);
+
+    const selectedProv = provincesList.find(p => p.name === provinceName);
+    if (selectedProv) {
+      fetch(`http://localhost:5000/api/location/districts?provinceId=${selectedProv.id}`)
+        .then(res => res.json())
+        .then(data => setDistrictsList(data))
+        .catch(err => console.error('Error fetching districts:', err));
+    }
+  };
+
+  const handleDistrictChange = (districtName) => {
+    handleInputChange('district', districtName);
+    setFormData(prev => ({ ...prev, ward: '' }));
+    setWardsList([]);
+
+    const selectedDist = districtsList.find(d => d.name === districtName);
+    if (selectedDist) {
+      fetch(`http://localhost:5000/api/location/wards?districtId=${selectedDist.id}`)
+        .then(res => res.json())
+        .then(data => setWardsList(data))
+        .catch(err => console.error('Error fetching wards:', err));
+    }
+  };
 
   // Validate password strength
   useEffect(() => {
@@ -70,8 +115,10 @@ export default function Register({ onNavigate }) {
       if (!formData.idNumber.trim()) newErrors.idNumber = 'ID / Passport Number is required.';
     } else if (currentStep === 2) {
       if (!formData.phone.trim()) newErrors.phone = 'Phone Number is required.';
-      if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-        newErrors.email = 'Please enter a valid email address.';
+      if (!formData.email.trim()) {
+        newErrors.email = 'Địa chỉ Email là bắt buộc.';
+      } else if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(formData.email.trim())) {
+        newErrors.email = 'Email đăng ký phải có đuôi @gmail.com.';
       }
       if (!formData.province) newErrors.province = 'Tỉnh / Thành phố is required.';
       if (!formData.street.trim()) newErrors.street = 'Số nhà, Tên đường is required.';
@@ -103,11 +150,20 @@ export default function Register({ onNavigate }) {
       setCurrentStep(currentStep + 1);
     } else {
       setIsSubmitting(true);
-      setTimeout(() => {
-        setIsSubmitting(false);
-        alert('Registration submitted successfully! Please check your email for verification.');
-        onNavigate('home');
-      }, 1500);
+      register(formData)
+        .then(() => {
+          setIsSubmitting(false);
+          success('Đăng ký tài khoản thành công! Vui lòng đăng nhập.');
+          onNavigate('login');
+        })
+        .catch((err) => {
+          setIsSubmitting(false);
+          const errMsg = err.message || 'Đăng ký không thành công. Vui lòng thử lại.';
+          error(errMsg);
+          setErrors({
+            apiError: errMsg
+          });
+        });
     }
   };
 
@@ -120,66 +176,72 @@ export default function Register({ onNavigate }) {
 
   const strengthDetails = getStrengthText();
 
-  // Mock location lists
-  const districts = {
-    hanoi: ['Quận Ba Đình', 'Quận Cầu Giấy', 'Quận Hoàn Kiếm', 'Quận Hai Bà Trưng'],
-    hcm: ['Quận 1', 'Quận 3', 'Quận Bình Thạnh', 'Quận Tân Bình', 'Thủ Đức'],
-    danang: ['Quận Hải Châu', 'Quận Thanh Khê', 'Quận Sơn Trà', 'Quận Ngũ Hành Sơn']
-  };
-
-  const wards = {
-    'Quận Cầu Giấy': ['Phường Dịch Vọng', 'Phường Quan Hoa', 'Phường Nghĩa Đô'],
-    'Quận 1': ['Phường Bến Nghé', 'Phường Bến Thành', 'Phường Đa Kao'],
-    'Quận Hải Châu': ['Phường Hòa Cường Bắc', 'Phường Hòa Cường Nam', 'Phường Thạch Thang']
-  };
+  // Dynamic location list from backend API
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background dark:bg-slate-900 text-on-surface dark:text-slate-100 transition-colors duration-200">
-      
+    <div 
+      className="min-h-screen relative overflow-hidden flex flex-col items-center justify-center p-6 text-on-surface dark:text-slate-100 transition-colors duration-200 bg-cover bg-center"
+      style={{ backgroundImage: "url('/emr_login_bg.png')" }}
+    >
+      {/* Dark/Light Contrast Overlay Mask */}
+      <div className="absolute inset-0 bg-slate-950/30 dark:bg-slate-950/60 z-0 pointer-events-none" />
+
+      {/* Aurora Ambient Background Blurs */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/20 dark:bg-primary/35 blur-[120px] pointer-events-none z-0 animate-pulse" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-teal-500/20 dark:bg-teal-500/35 blur-[120px] pointer-events-none z-0 animate-pulse" />
+
       {/* Top Bar Header */}
-      <header className="w-full max-w-4xl flex justify-between items-center mb-10">
-        <div className="flex items-center gap-2 cursor-pointer" onClick={() => onNavigate('home')}>
-          <div className="w-8 h-8 bg-primary-container dark:bg-slate-800 rounded flex items-center justify-center">
-            <span className="material-symbols-outlined text-on-primary-container dark:text-primary-fixed-dim text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-              health_and_safety
-            </span>
-          </div>
-          <span className="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim">
-            MedCore EMR
+      <header className="w-full max-w-4xl flex justify-between items-center mb-10 relative z-10">
+        <div className="flex items-center gap-md cursor-pointer" onClick={() => onNavigate('home')}>
+          <span className="material-symbols-outlined text-primary dark:text-sky-400 text-headline-md" style={{ fontVariationSettings: "'FILL' 1" }}>
+            medical_services
           </span>
+          <h1 className="font-headline-sm text-headline-sm font-semibold text-slate-900 dark:text-white">
+            MedEMR
+          </h1>
         </div>
-        <button 
-          onClick={() => { window.location.hash = '#login'; }}
-          className="font-label-md text-label-md text-on-surface-variant dark:text-slate-300 hover:text-primary dark:hover:text-primary-fixed-dim transition-colors flex items-center gap-1"
-        >
-          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-          Back to Login
-        </button>
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => onNavigate('home')}
+            className="font-label-md text-label-md text-slate-500 dark:text-slate-300 hover:text-primary dark:hover:text-sky-400 transition-colors flex items-center gap-1 cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[18px]">home</span>
+            Quay lại Trang chủ
+          </button>
+          <span className="text-slate-300 dark:text-slate-700">|</span>
+          <button 
+            onClick={() => onNavigate('login')}
+            className="font-label-md text-label-md text-slate-500 dark:text-slate-300 hover:text-primary dark:hover:text-sky-400 transition-colors flex items-center gap-1 cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+            Đăng nhập
+          </button>
+        </div>
       </header>
 
       {/* Main Grid Wrapper */}
       <main className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
         
         {/* Sidebar Navigation / Progress Stepper */}
-        <div className="md:col-span-4 bg-surface-container-low dark:bg-slate-800 p-8 rounded-xl border border-outline-variant dark:border-slate-700 flex flex-col gap-8 h-full md:min-h-[500px] transition-colors duration-200">
-          <h2 className="font-headline-md text-headline-md text-on-surface dark:text-white">
+        <div className="md:col-span-4 bg-white/85 dark:bg-slate-800/85 backdrop-blur-md p-8 rounded-xl border border-outline-variant/30 dark:border-slate-700 flex flex-col gap-8 h-full md:min-h-[500px] transition-colors duration-200 relative z-10">
+          <h2 className="font-headline-md text-headline-md text-slate-900 dark:text-white">
             Patient Registration
           </h2>
-          <p className="font-body-sm text-body-sm text-on-surface-variant dark:text-slate-400">
+          <p className="font-body-sm text-body-sm text-slate-500 dark:text-slate-400">
             Please complete the following steps to establish your electronic medical record.
           </p>
 
           <nav className="flex flex-col gap-6 relative">
-            <div className="absolute left-[15px] top-2 bottom-2 w-[2px] bg-outline-variant dark:bg-slate-700" />
+            <div className="absolute left-[15px] top-2 bottom-2 w-[2px] bg-slate-200 dark:bg-slate-700" />
             
             {/* Step 1 */}
-            <div className={`flex items-center gap-4 relative z-10 ${currentStep === 1 ? 'step-active' : currentStep > 1 ? 'text-secondary' : 'step-inactive text-slate-400'}`}>
+            <div className={`flex items-center gap-4 relative z-10 ${currentStep === 1 ? 'text-blue-600 dark:text-blue-400 font-semibold' : currentStep > 1 ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-slate-400 dark:text-slate-500'}`}>
               <div className={`w-8 h-8 rounded-full border-2 font-bold text-sm flex items-center justify-center transition-all ${
                 currentStep === 1 
-                  ? 'bg-primary border-primary text-white font-bold' 
+                  ? 'bg-blue-600 border-blue-600 text-white font-bold' 
                   : currentStep > 1 
-                    ? 'bg-secondary-container border-secondary text-on-secondary-container' 
-                    : 'bg-surface-container-high dark:bg-slate-700 border-outline-variant dark:border-slate-600 text-on-surface-variant'
+                    ? 'bg-emerald-100 dark:bg-emerald-950/30 border-emerald-500 text-emerald-600 dark:text-emerald-400' 
+                    : 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500'
               }`}>
                 {currentStep > 1 ? <span className="material-symbols-outlined text-[18px]">check</span> : '1'}
               </div>
@@ -190,13 +252,13 @@ export default function Register({ onNavigate }) {
             </div>
 
             {/* Step 2 */}
-            <div className={`flex items-center gap-4 relative z-10 ${currentStep === 2 ? 'step-active' : currentStep > 2 ? 'text-secondary' : 'step-inactive text-slate-400'}`}>
+            <div className={`flex items-center gap-4 relative z-10 ${currentStep === 2 ? 'text-blue-600 dark:text-blue-400 font-semibold' : currentStep > 2 ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-slate-400 dark:text-slate-500'}`}>
               <div className={`w-8 h-8 rounded-full border-2 font-bold text-sm flex items-center justify-center transition-all ${
                 currentStep === 2 
-                  ? 'bg-primary border-primary text-white font-bold' 
+                  ? 'bg-blue-600 border-blue-600 text-white font-bold' 
                   : currentStep > 2 
-                    ? 'bg-secondary-container border-secondary text-on-secondary-container' 
-                    : 'bg-surface-container-high dark:bg-slate-700 border-outline-variant dark:border-slate-600 text-on-surface-variant'
+                    ? 'bg-emerald-100 dark:bg-emerald-950/30 border-emerald-500 text-emerald-600 dark:text-emerald-400' 
+                    : 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500'
               }`}>
                 {currentStep > 2 ? <span className="material-symbols-outlined text-[18px]">check</span> : '2'}
               </div>
@@ -207,11 +269,11 @@ export default function Register({ onNavigate }) {
             </div>
 
             {/* Step 3 */}
-            <div className={`flex items-center gap-4 relative z-10 ${currentStep === 3 ? 'step-active' : 'step-inactive text-slate-400'}`}>
+            <div className={`flex items-center gap-4 relative z-10 ${currentStep === 3 ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-slate-400 dark:text-slate-500'}`}>
               <div className={`w-8 h-8 rounded-full border-2 font-bold text-sm flex items-center justify-center transition-all ${
                 currentStep === 3 
-                  ? 'bg-primary border-primary text-white font-bold' 
-                  : 'bg-surface-container-high dark:bg-slate-700 border-outline-variant dark:border-slate-600 text-on-surface-variant'
+                  ? 'bg-blue-600 border-blue-600 text-white font-bold' 
+                  : 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500'
               }`}>
                 3
               </div>
@@ -222,9 +284,9 @@ export default function Register({ onNavigate }) {
             </div>
           </nav>
 
-          <div className="mt-auto pt-6 border-t border-outline-variant dark:border-slate-700">
-            <div className="flex items-center gap-3 text-on-surface-variant dark:text-slate-400">
-              <span className="material-symbols-outlined text-primary dark:text-primary-fixed-dim animate-pulse" style={{ fontVariationSettings: "'FILL' 1" }}>
+          <div className="mt-auto pt-6 border-t border-slate-200 dark:border-slate-700">
+            <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
+              <span className="material-symbols-outlined text-primary dark:text-sky-400 animate-pulse" style={{ fontVariationSettings: "'FILL' 1" }}>
                 lock
               </span>
               <span className="font-body-sm text-body-sm">HIPAA Compliant Data Encryption</span>
@@ -233,7 +295,7 @@ export default function Register({ onNavigate }) {
         </div>
 
         {/* Form Content Area Card */}
-        <div className="md:col-span-8 bg-white dark:bg-slate-800 p-8 rounded-xl border border-outline-variant dark:border-slate-700 shadow-sm min-h-[500px] flex flex-col transition-colors duration-200">
+        <div className="md:col-span-8 bg-white/85 dark:bg-slate-800/85 backdrop-blur-md p-8 rounded-xl border border-outline-variant/30 dark:border-slate-700 shadow-sm min-h-[500px] flex flex-col transition-colors duration-200 relative z-10">
           <form className="flex-grow animate-fade-in" onSubmit={(e) => e.preventDefault()}>
             
             {/* STEP 1 CONTENT */}
@@ -332,10 +394,10 @@ export default function Register({ onNavigate }) {
                         {errors.phone && <p className="text-red-500 text-body-sm mt-xs">{errors.phone}</p>}
                       </div>
                       <div className="space-y-xs">
-                        <label className="block font-label-md text-label-md text-on-surface-variant dark:text-slate-300">Địa chỉ Email</label>
+                        <label className="block font-label-md text-label-md text-on-surface-variant dark:text-slate-300">Địa chỉ Email *</label>
                         <input 
                           type="email" 
-                          placeholder="example@medcore.vn"
+                          placeholder="example@gmail.com"
                           value={formData.email}
                           onChange={(e) => handleInputChange('email', e.target.value)}
                           className="w-full px-md py-sm border border-outline-variant dark:border-slate-700 rounded-lg font-body-md text-body-md bg-surface dark:bg-slate-900 text-on-surface dark:text-white focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
@@ -356,16 +418,13 @@ export default function Register({ onNavigate }) {
                         <label className="block font-label-md text-label-md text-on-surface-variant dark:text-slate-300">Tỉnh/Thành phố *</label>
                         <select 
                           value={formData.province}
-                          onChange={(e) => {
-                            handleInputChange('province', e.target.value);
-                            setFormData(prev => ({ ...prev, district: '', ward: '' }));
-                          }}
-                          className="w-full px-md py-sm border border-outline-variant dark:border-slate-700 rounded-lg font-body-md text-body-md bg-surface dark:bg-slate-900 text-on-surface dark:text-white focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all appearance-none"
+                          onChange={(e) => handleProvinceChange(e.target.value)}
+                          className="w-full px-md py-sm border border-slate-200 dark:border-slate-700 rounded-lg font-body-md text-body-md bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all appearance-none"
                         >
                           <option value="">Chọn Tỉnh/Thành phố</option>
-                          <option value="hanoi">Hà Nội</option>
-                          <option value="hcm">TP. Hồ Chí Minh</option>
-                          <option value="danang">Đà Nẵng</option>
+                          {provincesList.map(p => (
+                            <option key={p.id} value={p.name}>{p.name}</option>
+                          ))}
                         </select>
                         {errors.province && <p className="text-red-500 text-body-sm mt-xs">{errors.province}</p>}
                       </div>
@@ -373,16 +432,13 @@ export default function Register({ onNavigate }) {
                         <label className="block font-label-md text-label-md text-on-surface-variant dark:text-slate-300">Quận/Huyện *</label>
                         <select 
                           value={formData.district}
-                          onChange={(e) => {
-                            handleInputChange('district', e.target.value);
-                            setFormData(prev => ({ ...prev, ward: '' }));
-                          }}
+                          onChange={(e) => handleDistrictChange(e.target.value)}
                           disabled={!formData.province}
-                          className="w-full px-md py-sm border border-outline-variant dark:border-slate-700 rounded-lg font-body-md text-body-md bg-surface dark:bg-slate-900 text-on-surface dark:text-white focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all appearance-none disabled:opacity-50"
+                          className="w-full px-md py-sm border border-slate-200 dark:border-slate-700 rounded-lg font-body-md text-body-md bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all appearance-none disabled:opacity-50"
                         >
                           <option value="">Chọn Quận/Huyện</option>
-                          {formData.province && districts[formData.province].map((d) => (
-                            <option key={d} value={d}>{d}</option>
+                          {districtsList.map(d => (
+                            <option key={d.id} value={d.name}>{d.name}</option>
                           ))}
                         </select>
                       </div>
@@ -391,12 +447,12 @@ export default function Register({ onNavigate }) {
                         <select 
                           value={formData.ward}
                           onChange={(e) => handleInputChange('ward', e.target.value)}
-                          disabled={!formData.district || !wards[formData.district]}
-                          className="w-full px-md py-sm border border-outline-variant dark:border-slate-700 rounded-lg font-body-md text-body-md bg-surface dark:bg-slate-900 text-on-surface dark:text-white focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all appearance-none disabled:opacity-50"
+                          disabled={!formData.district}
+                          className="w-full px-md py-sm border border-slate-200 dark:border-slate-700 rounded-lg font-body-md text-body-md bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all appearance-none disabled:opacity-50"
                         >
                           <option value="">Chọn Phường/Xã</option>
-                          {formData.district && wards[formData.district] && wards[formData.district].map((w) => (
-                            <option key={w} value={w}>{w}</option>
+                          {wardsList.map(w => (
+                            <option key={w.id} value={w.name}>{w.name}</option>
                           ))}
                         </select>
                       </div>
@@ -468,6 +524,12 @@ export default function Register({ onNavigate }) {
             {/* STEP 3 CONTENT */}
             {currentStep === 3 && (
                 <div className="step-pane animate-in fade-in duration-300">
+                  {errors.apiError && (
+                    <div className="bg-red-500/10 text-red-500 p-md rounded-lg text-body-md mb-6 flex items-center gap-sm border border-red-500/20">
+                      <span className="material-symbols-outlined">error</span>
+                      <span>{errors.apiError}</span>
+                    </div>
+                  )}
                   <div className="mb-6 flex justify-between items-start">
                     <div>
                       <h3 className="font-headline-lg text-headline-lg text-on-surface dark:text-white mb-2">Account Security</h3>
@@ -637,7 +699,7 @@ export default function Register({ onNavigate }) {
       </main>
 
       {/* Simple Footer */}
-      <footer className="w-full max-w-4xl mt-12 py-6 border-t border-outline-variant dark:border-slate-800 flex flex-col md:flex-row justify-between items-center text-on-surface-variant dark:text-slate-400">
+      <footer className="w-full max-w-4xl mt-12 py-6 border-t border-outline-variant dark:border-slate-800 flex flex-col md:flex-row justify-between items-center text-on-surface-variant dark:text-slate-400 relative z-10">
         <p className="font-body-sm text-body-sm">© 2026 MedCore Systems. HIPAA Compliant Interface.</p>
         <div className="flex gap-4 mt-4 md:mt-0 font-body-sm text-body-sm">
           <a className="hover:text-primary dark:hover:text-primary-fixed-dim transition-colors hover:underline" href="#privacy">Privacy Policy</a>

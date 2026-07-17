@@ -3,6 +3,7 @@ import ReceptionistDashboardTab from '../pages/Dashboard/ReceptionistDashboardTa
 import ReceptionistPatientsTab from '../pages/Patients/ReceptionistPatientsTab';
 import ReceptionistAppointmentsTab from '../pages/Appointments/ReceptionistAppointmentsTab';
 import ReceptionistBillingTab from '../pages/Billing/ReceptionistBillingTab';
+import ReceptionistWardAssignmentTab from '../pages/WardAssignment/ReceptionistWardAssignmentTab';
 import ReceptionistSettingsTab from '../pages/Settings/ReceptionistSettingsTab';
 
 const translations = {
@@ -67,6 +68,7 @@ const translations = {
     helpCenter: 'Trợ giúp',
     signOut: 'Đăng xuất',
     clinicalPortal: 'Cổng Đón tiếp',
+    wardAssignment: 'Phân công Phòng bệnh',
 
     // Patients tab translations
     patientsTitle: 'Danh sách bệnh nhân',
@@ -222,6 +224,7 @@ const translations = {
     pharmacy: 'Pharmacy',
     settings: 'Settings',
     newConsultation: 'New Consultation',
+    wardAssignment: 'Ward Assignment',
     receptionistDashboard: 'Receptionist Dashboard',
     centralAdmissionsBilling: 'Central Wing - Admissions & Billing',
     newPatientCheckin: 'New Patient Check-in',
@@ -473,8 +476,10 @@ const initialInvoices = [
   { id: 405, patientName: 'Đặng Văn Khoa', mrn: 'BN-2023-2287', service: 'Kiểm tra thị lực', total: 200000, status: 'Quá hạn', statusEn: 'Overdue', insurance: 'N/A', fees: { exam: 200000, lab: 0 } }
 ];
 
-export default function ReceptionistDashboard({ onNavigate, theme: propTheme, setTheme: propSetTheme }) {
-  const [lang, setLang] = useState('vi'); // 'vi' or 'en'
+export default function ReceptionistDashboard({ onNavigate, theme: propTheme, setTheme: propSetTheme, lang: propLang, setLang: propSetLang }) {
+  const [localLang, setLocalLang] = useState('vi');
+  const lang = propLang !== undefined ? propLang : localLang;
+  const setLang = propSetLang !== undefined ? propSetLang : setLocalLang;
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   const [localTheme, setLocalTheme] = useState(() => localStorage.getItem('theme') || 'light');
@@ -1093,6 +1098,7 @@ export default function ReceptionistDashboard({ onNavigate, theme: propTheme, se
             { label: 'Patients', key: 'patients', icon: 'group' },
             { label: 'Appointments', key: 'appointments', icon: 'calendar_today' },
             { label: 'Billing', key: 'billing', icon: 'payments' },
+            { label: 'Ward Assignment', key: 'wardAssignment', icon: 'meeting_room' },
             { label: 'Settings', key: 'settings', icon: 'settings' }
           ].map((item) => {
             const isActive = activeTab === item.label;
@@ -1324,6 +1330,13 @@ export default function ReceptionistDashboard({ onNavigate, theme: propTheme, se
             />
           )}
 
+          {activeTab === 'Ward Assignment' && (
+            <ReceptionistWardAssignmentTab
+              lang={lang}
+              t={t}
+            />
+          )}
+
           {activeTab === 'Settings' && (
             <ReceptionistSettingsTab
               lang={lang}
@@ -1339,7 +1352,7 @@ export default function ReceptionistDashboard({ onNavigate, theme: propTheme, se
           )}
 
           {/* Coming Soon for other tabs */}
-          {activeTab !== 'Dashboard' && activeTab !== 'Patients' && activeTab !== 'Appointments' && activeTab !== 'Billing' && activeTab !== 'Settings' && (
+          {activeTab !== 'Dashboard' && activeTab !== 'Patients' && activeTab !== 'Appointments' && activeTab !== 'Billing' && activeTab !== 'Ward Assignment' && activeTab !== 'Settings' && (
             <div className="py-20 text-center bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 rounded-xl clinical-shadow">
               <span className="material-symbols-outlined text-[64px] text-outline dark:text-slate-500 mb-4">
                 construction

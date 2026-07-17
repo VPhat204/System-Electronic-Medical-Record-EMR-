@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+
+import { AuthContext } from '../features/auth/context/AuthContext';
 
 export default function Navbar({ theme, toggleTheme, onOpenAuth, onNavigate, currentPage }) {
+  const { user } = useContext(AuthContext);
   const [isOpen, setIsOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const navItems = [
     { label: 'Home', page: 'home', href: '#' },
@@ -63,19 +67,65 @@ export default function Navbar({ theme, toggleTheme, onOpenAuth, onNavigate, cur
         </button>
 
         {/* Desktop Buttons */}
-        <div className="hidden md:flex items-center gap-sm sm:gap-md">
-          <button 
-            onClick={() => onOpenAuth('login')}
-            className="px-md py-sm font-label-md text-label-md text-primary dark:text-primary-fixed-dim border border-primary dark:border-primary-fixed-dim hover:bg-primary-fixed dark:hover:bg-slate-800 transition-colors rounded-lg whitespace-nowrap"
-          >
-            Login
-          </button>
-          <button 
-            onClick={() => onOpenAuth('register')}
-            className="px-md py-sm font-label-md text-label-md bg-primary-container text-white hover:bg-primary transition-colors rounded-lg whitespace-nowrap"
-          >
-            Register
-          </button>
+        <div className="hidden md:flex items-center gap-sm sm:gap-md relative">
+          {user ? (
+            <div className="relative">
+              <button 
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="flex items-center gap-2 px-4 py-2 font-semibold text-sm bg-primary/10 dark:bg-slate-800 text-primary dark:text-slate-100 hover:bg-primary/20 transition-all rounded-lg whitespace-nowrap cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[20px]">account_circle</span>
+                <span>{user.fullName}</span>
+                <span className="material-symbols-outlined text-[16px] transition-transform duration-200" style={{ transform: dropdownOpen ? 'rotate(180deg)' : 'rotate(0)' }}>
+                  keyboard_arrow_down
+                </span>
+              </button>
+
+              {dropdownOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setDropdownOpen(false)} />
+                  <div className="absolute right-0 mt-2 w-56 rounded-xl bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 shadow-2xl z-20 py-2 animate-in fade-in slide-in-from-top-1 duration-150">
+                    <div className="px-4 py-2 border-b border-outline-variant dark:border-slate-700">
+                      <p className="font-semibold text-sm text-slate-800 dark:text-slate-200 truncate">{user.fullName}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user.email || user.username}</p>
+                      <span className="inline-block mt-1 px-1.5 py-0.5 bg-primary/10 text-primary dark:text-primary-fixed-dim rounded text-[10px] uppercase font-bold tracking-wider">
+                        {user.role}
+                      </span>
+                    </div>
+                    <button 
+                      onClick={() => { onNavigate(`${user.role}-dashboard`); setDropdownOpen(false); }}
+                      className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2 transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">dashboard</span>
+                      {user.role === 'patient' ? 'Quay lại hệ thống Patient' : 'Bảng điều khiển'}
+                    </button>
+                    <button 
+                      onClick={() => { onNavigate('home', true); setDropdownOpen(false); }}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 flex items-center gap-2 transition-colors border-t border-slate-100 dark:border-slate-700/50 mt-1"
+                    >
+                      <span className="material-symbols-outlined text-[18px] text-red-600">logout</span>
+                      Đăng xuất
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : (
+            <>
+              <button 
+                onClick={() => onOpenAuth('login')}
+                className="px-md py-sm font-label-md text-label-md text-primary dark:text-primary-fixed-dim border border-primary dark:border-primary-fixed-dim hover:bg-primary-fixed dark:hover:bg-slate-800 transition-colors rounded-lg whitespace-nowrap"
+              >
+                Login
+              </button>
+              <button 
+                onClick={() => onOpenAuth('register')}
+                className="px-md py-sm font-label-md text-label-md bg-primary-container text-white hover:bg-primary transition-colors rounded-lg whitespace-nowrap"
+              >
+                Register
+              </button>
+            </>
+          )}
         </div>
 
         {/* Mobile Hamburger Button */}
@@ -113,18 +163,43 @@ export default function Navbar({ theme, toggleTheme, onOpenAuth, onNavigate, cur
           ))}
           <hr className="border-outline-variant dark:border-slate-800 my-xs" />
           <div className="flex flex-col gap-sm px-md">
-            <button 
-              onClick={() => { onOpenAuth('login'); setIsOpen(false); }}
-              className="w-full py-2 font-label-md text-label-md text-primary dark:text-primary-fixed-dim border border-primary dark:border-primary-fixed-dim hover:bg-primary-fixed dark:hover:bg-slate-800 transition-colors rounded-lg text-center"
-            >
-              Login
-            </button>
-            <button 
-              onClick={() => { onOpenAuth('register'); setIsOpen(false); }}
-              className="w-full py-2 font-label-md text-label-md bg-primary-container text-white hover:bg-primary transition-colors rounded-lg text-center"
-            >
-              Register
-            </button>
+            {user ? (
+              <div className="space-y-2 text-left">
+                <div className="px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                  <p className="font-semibold text-sm text-slate-800 dark:text-slate-200">{user.fullName}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{user.email || user.username}</p>
+                </div>
+                <button 
+                  onClick={() => { onNavigate(`${user.role}-dashboard`); setIsOpen(false); }}
+                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors rounded-lg"
+                >
+                  <span className="material-symbols-outlined text-[18px]">dashboard</span>
+                  {user.role === 'patient' ? 'Quay lại hệ thống Patient' : 'Bảng điều khiển'}
+                </button>
+                <button 
+                  onClick={() => { onNavigate('home', true); setIsOpen(false); }}
+                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors rounded-lg"
+                >
+                  <span className="material-symbols-outlined text-[18px] text-red-600">logout</span>
+                  Đăng xuất
+                </button>
+              </div>
+            ) : (
+              <>
+                <button 
+                  onClick={() => { onOpenAuth('login'); setIsOpen(false); }}
+                  className="w-full py-2 font-label-md text-label-md text-primary dark:text-primary-fixed-dim border border-primary dark:border-primary-fixed-dim hover:bg-primary-fixed dark:hover:bg-slate-800 transition-colors rounded-lg text-center"
+                >
+                  Login
+                </button>
+                <button 
+                  onClick={() => { onOpenAuth('register'); setIsOpen(false); }}
+                  className="w-full py-2 font-label-md text-label-md bg-primary-container text-white hover:bg-primary transition-colors rounded-lg text-center"
+                >
+                  Register
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}

@@ -142,7 +142,7 @@ export default function BlogsPage({ onNavigate }) {
             })}
           </div>
           <div className="relative w-full md:w-80">
-            <span className="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline dark:text-slate-400">
+            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline dark:text-slate-400">
               search
             </span>
             <input 
@@ -150,7 +150,7 @@ export default function BlogsPage({ onNavigate }) {
               placeholder="Tìm kiếm bài viết..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-xl pr-md py-sm rounded-lg border border-outline-variant dark:border-slate-700 focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-surface-container-lowest dark:bg-slate-900 text-body-md text-on-surface dark:text-white transition-all"
+              className="w-full pl-12 pr-md py-sm rounded-lg border border-outline-variant dark:border-slate-700 focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-surface-container-lowest dark:bg-slate-900 text-body-md text-on-surface dark:text-white transition-all"
             />
           </div>
         </div>

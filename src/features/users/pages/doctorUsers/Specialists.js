@@ -72,7 +72,7 @@ const Specialists = forwardRef(({ selectedDepartment, setSelectedDepartment, onB
         <div className="max-w-3xl mx-auto mb-xl flex flex-col md:flex-row items-center gap-md">
           {/* Search bar */}
           <div className="relative w-full md:flex-1">
-            <span className="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-outline dark:text-slate-400">
+            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline dark:text-slate-400">
               search
             </span>
             <input 
@@ -81,7 +81,7 @@ const Specialists = forwardRef(({ selectedDepartment, setSelectedDepartment, onB
               placeholder="Search doctor's name or specialty..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-xl pr-md py-sm bg-white dark:bg-slate-800 text-on-surface dark:text-white border border-outline-variant dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder-slate-400 dark:placeholder-slate-500"
+              className="w-full pl-12 pr-md py-sm bg-white dark:bg-slate-800 text-on-surface dark:text-white border border-outline-variant dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder-slate-400 dark:placeholder-slate-500"
             />
             {searchQuery && (
               <button 

@@ -43,3 +43,40 @@ body {
   top: 0;
   z-index: 50;
 }
+
+/* Toast custom slide-in animation */
+@keyframes slideIn {
+  from {
+    transform: translateY(1rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.animate-slide-in {
+  animation: slideIn 0.2s ease-out forwards;
+}
+
+/* Override invalid theme utility classes for EMR */
+.bg-surface {
+  background-color: #ffffff !important;
+}
+.dark .bg-surface {
+  background-color: #0f172a !important; /* slate-900 */
+}
+
+.border-outline, .border-outline-variant {
+  border-color: #e2e8f0 !important; /* slate-200 */
+}
+.dark .border-outline, .dark .border-outline-variant {
+  border-color: #334155 !important; /* slate-700 */
+}
+
+.text-on-surface, .text-on-surface-variant {
+  color: #0f172a !important; /* slate-900 */
+}
+.dark .text-on-surface, .dark .text-on-surface-variant {
+  color: #f8fafc !important; /* slate-50 */
+}

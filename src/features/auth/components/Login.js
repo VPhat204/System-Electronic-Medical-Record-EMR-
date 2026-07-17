@@ -1,6 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+
+import { ToastContext } from '../../../shared/context/ToastContext';
+import { AuthContext } from '../context/AuthContext';
 
 export default function Login({ onNavigate }) {
+  const { login } = useContext(AuthContext);
+  const { success, error } = useContext(ToastContext);
+
   const [lang, setLang] = useState('EN'); // 'EN' or 'VN'
   const [identity, setIdentity] = useState('');
   const [password, setPassword] = useState('');
@@ -33,31 +39,37 @@ export default function Login({ onNavigate }) {
     setErrors({});
     setLoading(true);
 
-    // Simulate login processing
-    setTimeout(() => {
-      setLoading(false);
-      setSuccessMsg(lang === 'EN' ? 'Login successful! Redirecting...' : 'Đăng nhập thành công! Đang chuyển hướng...');
-      setTimeout(() => {
-        const lowerId = identity.toLowerCase();
-        if (lowerId.includes('admin')) {
-          onNavigate('admin-dashboard');
-        } else if (lowerId.includes('doctor')) {
-          onNavigate('doctor-dashboard');
-        } else if (lowerId.includes('receptionist') || lowerId.includes('letan') || lowerId.includes('le tan')) {
-          onNavigate('receptionist-dashboard');
-        } else if (lowerId.includes('pharmacist') || lowerId.includes('duocsi') || lowerId.includes('duoc si')) {
-          onNavigate('pharmacist-dashboard');
-        } else if (lowerId.includes('nurse') || lowerId.includes('yta') || lowerId.includes('y ta') || lowerId.includes('dieuduong') || lowerId.includes('dieu duong')) {
-          onNavigate('nurse-dashboard');
-        } else {
-          onNavigate('patient-dashboard');
-        }
-      }, 1500);
-    }, 1500);
+    login(identity, password)
+      .then((user) => {
+        setLoading(false);
+        const msg = lang === 'EN' ? 'Login successful! Redirecting...' : 'Đăng nhập thành công! Đang chuyển hướng...';
+        success(msg);
+        setSuccessMsg(msg);
+        setTimeout(() => {
+          onNavigate(`${user.role}-dashboard`);
+        }, 1500);
+      })
+      .catch((err) => {
+        setLoading(false);
+        const errMsg = err.message || (lang === 'EN' ? 'Invalid credentials.' : 'Thông tin đăng nhập không chính xác.');
+        error(errMsg);
+        setErrors({
+          apiError: errMsg
+        });
+      });
   };
 
   return (
-    <div className="bg-background text-on-background min-h-screen flex items-center justify-center p-0 md:p-0 transition-colors duration-200">
+    <div 
+      className="text-on-background min-h-screen flex items-center justify-center p-0 md:p-0 transition-colors duration-200 relative overflow-hidden bg-cover bg-center"
+      style={{ backgroundImage: "url('/emr_login_bg.png')" }}
+    >
+      {/* Dark/Light Contrast Overlay Mask */}
+      <div className="absolute inset-0 bg-slate-950/30 dark:bg-slate-950/60 z-0 pointer-events-none" />
+
+      {/* Aurora Ambient Background Blurs */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/20 dark:bg-primary/35 blur-[120px] pointer-events-none z-0 animate-pulse" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-teal-500/20 dark:bg-teal-500/35 blur-[120px] pointer-events-none z-0 animate-pulse" />
       
       {/* Language Switcher (Top Right) */}
       <div className="fixed top-lg right-lg z-50 flex gap-sm bg-surface-container-low dark:bg-slate-800 p-xs rounded shadow-sm border border-outline-variant dark:border-slate-700 transition-colors duration-200">
@@ -65,7 +77,7 @@ export default function Login({ onNavigate }) {
           onClick={() => setLang('EN')}
           className={`px-sm py-xs font-label-md text-label-md rounded shadow-sm transition-all ${
             lang === 'EN' 
-              ? 'text-primary dark:text-primary-fixed-dim bg-surface-container-lowest dark:bg-slate-700 font-semibold' 
+              ? 'text-primary dark:text-sky-400 bg-surface-container-lowest dark:bg-slate-700 font-semibold' 
               : 'text-on-surface-variant dark:text-slate-400 hover:text-primary'
           }`}
         >
@@ -75,7 +87,7 @@ export default function Login({ onNavigate }) {
           onClick={() => setLang('VN')}
           className={`px-sm py-xs font-label-md text-label-md rounded shadow-sm transition-all ${
             lang === 'VN' 
-              ? 'text-primary dark:text-primary-fixed-dim bg-surface-container-lowest dark:bg-slate-700 font-semibold' 
+              ? 'text-primary dark:text-sky-400 bg-surface-container-lowest dark:bg-slate-700 font-semibold' 
               : 'text-on-surface-variant dark:text-slate-400 hover:text-primary'
           }`}
         >
@@ -83,55 +95,31 @@ export default function Login({ onNavigate }) {
         </button>
       </div>
 
-      {/* Split Screen Container */}
-      <main className="flex w-full min-h-screen overflow-hidden">
+      {/* Centered Login Card */}
+      <main className="w-full max-w-md bg-white/85 dark:bg-slate-900/90 backdrop-blur-md p-8 md:p-10 rounded-2xl border border-outline-variant/30 dark:border-slate-800 shadow-2xl relative z-10 my-8">
         
-        {/* Left Side: Clinical Visuals (Hidden on Mobile) */}
-        <section className="hidden lg:flex lg:w-3/5 relative overflow-hidden bg-primary-container">
-          <div className="absolute inset-0 z-10 bg-gradient-to-r from-primary/45 to-transparent"></div>
-          <div 
-            className="w-full h-full bg-cover bg-center mix-blend-overlay opacity-80 scale-105 transform hover:scale-100 transition-all duration-700" 
-            style={{ 
-              backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuA70VivwEQaKHhfUtoShE-qaqBYrPir8mQqZkgGaevDwnJ-Xv5xMVahYFs-fMGrx69s7zxf__T_n8aTOJGqO-1AG-8SD2BVTuzF2Py5lV5pnsGW2TwFc1t5lsb473Ogmxm2R9xmiLXTU1OOnRY5U-vu3Gbxow5gye4DWY5JQU34b9nh943aozHHRXaJ6iLU0Jh9PlftojDgHjwZ18X8nbZL_dRT7HS8CwSFqGMMWzpKOwUCt9BO_cvf')" 
-            }}
-            data-alt="Modern clinical reception dawn lobby"
-          />
-          
-          {/* Branding Overlay */}
-          <div className="absolute bottom-xl left-xl z-20 max-w-lg">
-            <h1 className="font-headline-xl text-headline-xl text-surface-container-lowest mb-sm cursor-pointer" onClick={() => onNavigate('home')}>
-              MedCore EMR
-            </h1>
-            <p className="font-body-lg text-body-lg text-on-primary-container leading-relaxed">
-              {lang === 'EN' 
-                ? 'Precision-engineered electronic medical records for the next generation of healthcare providers. Empowering clinical excellence through intuitive data management.'
-                : 'Hồ sơ bệnh án điện tử được thiết kế chính xác cho thế hệ nhà cung cấp dịch vụ y tế tiếp theo. Nâng cao hiệu quả lâm sàng thông qua quản lý dữ liệu trực quan.'
-              }
-            </p>
-            <div className="mt-lg flex items-center gap-md">
-              <div className="flex items-center gap-xs text-surface-container-lowest opacity-90">
-                <span className="material-symbols-outlined text-[18px]">verified_user</span>
-                <span className="font-label-md text-label-md">HIPAA Compliant</span>
-              </div>
-              <div className="w-1 h-1 bg-surface-container-lowest rounded-full opacity-40"></div>
-              <div className="flex items-center gap-xs text-surface-container-lowest opacity-90">
-                <span className="material-symbols-outlined text-[18px]">lock</span>
-                <span className="font-label-md text-label-md">256-bit Encryption</span>
-              </div>
+        {/* Back to Home Button */}
+        <button 
+          onClick={() => onNavigate('home')}
+          className="absolute top-4 left-4 inline-flex items-center gap-1 font-semibold text-xs text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-sky-400 transition-colors cursor-pointer z-20"
+        >
+          <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+          {lang === 'EN' ? 'Back to Home' : 'Quay lại Trang chủ'}
+        </button>
+
+        <div className="w-full mx-auto mt-4">
+
+          {/* Logo Header */}
+          <div className="flex flex-col items-center gap-sm mb-lg text-center">
+            <div className="flex items-center gap-md cursor-pointer hover:scale-105 transition-transform" onClick={() => onNavigate('home')}>
+              <span className="material-symbols-outlined text-primary dark:text-sky-400 text-headline-xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                medical_services
+              </span>
+              <h1 className="font-headline-md text-headline-md font-semibold text-slate-900 dark:text-white">
+                MedEMR
+              </h1>
             </div>
           </div>
-        </section>
-
-        {/* Right Side: Login Form */}
-        <section className="w-full lg:w-2/5 flex flex-col justify-center bg-surface-container-lowest dark:bg-slate-900 px-margin md:px-xl py-xl border-l border-outline-variant dark:border-slate-800 transition-colors duration-200">
-          <div className="max-w-md w-full mx-auto">
-            
-            {/* Mobile Logo */}
-            <div className="lg:hidden mb-xl">
-              <span className="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim cursor-pointer" onClick={() => onNavigate('home')}>
-                MedCore EMR
-              </span>
-            </div>
 
             {successMsg ? (
               <div className="text-center py-xl flex flex-col items-center justify-center space-y-md animate-fade-in">
@@ -157,13 +145,19 @@ export default function Login({ onNavigate }) {
                 </header>
 
                 <form onSubmit={handleLoginSubmit} className="space-y-lg">
+                  {errors.apiError && (
+                    <div className="bg-red-500/10 text-red-500 p-md rounded-lg text-body-md flex items-center gap-sm border border-red-500/20">
+                      <span className="material-symbols-outlined">error</span>
+                      <span>{errors.apiError}</span>
+                    </div>
+                  )}
                   {/* Username/Email Field */}
                   <div className="space-y-xs">
                     <label className="block font-label-md text-label-md text-on-surface-variant dark:text-slate-300" htmlFor="identity">
                       {lang === 'EN' ? 'Username or Email' : 'Tên tài khoản hoặc Email'}
                     </label>
                     <div className="relative group">
-                      <span className="absolute left-md top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant dark:text-slate-400 transition-colors duration-200 group-focus-within:text-primary">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant dark:text-slate-400 transition-colors duration-200 group-focus-within:text-primary">
                         person
                       </span>
                       <input 
@@ -173,7 +167,7 @@ export default function Login({ onNavigate }) {
                         value={identity}
                         onChange={(e) => { setIdentity(e.target.value); setErrors({...errors, identity: ''}); }}
                         required
-                        className="w-full pl-xl pr-md py-md bg-surface dark:bg-slate-800 border border-outline-variant dark:border-slate-700 rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none font-body-md text-body-md text-on-surface dark:text-white transition-all placeholder-slate-400 dark:placeholder-slate-500"
+                        className="w-full pl-12 pr-md py-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none font-body-md text-body-md text-slate-900 dark:text-white transition-all placeholder-slate-400 dark:placeholder-slate-500"
                       />
                     </div>
                     {errors.identity && (
@@ -192,14 +186,14 @@ export default function Login({ onNavigate }) {
                       </label>
                       <button 
                         type="button"
-                        onClick={() => alert(lang === 'EN' ? 'Password recovery link has been sent!' : 'Liên kết khôi phục mật khẩu đã được gửi!')}
-                        className="font-label-md text-label-md text-primary dark:text-primary-fixed-dim hover:underline"
+                        onClick={() => onNavigate('forgot-password')}
+                        className="font-label-md text-label-md text-primary dark:text-sky-400 hover:underline"
                       >
                         {lang === 'EN' ? 'Forgot Password?' : 'Quên mật khẩu?'}
                       </button>
                     </div>
                     <div className="relative group">
-                      <span className="absolute left-md top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant dark:text-slate-400 transition-colors duration-200 group-focus-within:text-primary">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant dark:text-slate-400 transition-colors duration-200 group-focus-within:text-primary">
                         lock
                       </span>
                       <input 
@@ -209,7 +203,7 @@ export default function Login({ onNavigate }) {
                         value={password}
                         onChange={(e) => { setPassword(e.target.value); setErrors({...errors, password: ''}); }}
                         required
-                        className="w-full pl-xl pr-[48px] py-md bg-surface dark:bg-slate-800 border border-outline-variant dark:border-slate-700 rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none font-body-md text-body-md text-on-surface dark:text-white transition-all placeholder-slate-400 dark:placeholder-slate-500"
+                        className="w-full pl-12 pr-[48px] py-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none font-body-md text-body-md text-slate-900 dark:text-white transition-all placeholder-slate-400 dark:placeholder-slate-500"
                       />
                       <button 
                         type="button"
@@ -236,7 +230,7 @@ export default function Login({ onNavigate }) {
                       id="remember" 
                       checked={remember}
                       onChange={(e) => setRemember(e.target.checked)}
-                      className="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 cursor-pointer"
+                      className="rounded border-slate-300 dark:border-slate-700 text-primary dark:bg-slate-800 focus:ring-primary w-4 h-4 cursor-pointer"
                     />
                     <label className="font-body-md text-body-md text-on-surface-variant dark:text-slate-300 cursor-pointer select-none" htmlFor="remember">
                       {lang === 'EN' ? 'Remember this device' : 'Ghi nhớ thiết bị này'}
@@ -247,7 +241,7 @@ export default function Login({ onNavigate }) {
                   <button 
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-primary hover:bg-primary-container text-white py-md rounded-lg font-label-md text-label-md uppercase tracking-wider shadow-sm hover:shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-sm disabled:opacity-50"
+                    className="w-full bg-primary hover:bg-primary/90 dark:bg-sky-600 dark:hover:bg-sky-500 text-white py-md rounded-lg font-label-md text-label-md uppercase tracking-wider shadow-sm hover:shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-sm disabled:opacity-50"
                   >
                     {loading ? (
                       <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
@@ -266,8 +260,8 @@ export default function Login({ onNavigate }) {
                     {lang === 'EN' ? 'Patient seeking medical history?' : 'Bệnh nhân đang tìm kiếm lịch sử y tế?'}
                   </p>
                   <button 
-                    onClick={() => { window.location.hash = '#register'; }}
-                    className="inline-flex items-center gap-xs font-label-md text-label-md text-primary dark:text-primary-fixed-dim bg-secondary-fixed/20 dark:bg-slate-800 hover:bg-secondary-fixed/40 dark:hover:bg-slate-700 px-lg py-sm rounded-full transition-all"
+                    onClick={() => onNavigate('register')}
+                    className="inline-flex items-center gap-xs font-label-md text-label-md text-primary dark:text-sky-400 bg-primary/10 dark:bg-sky-500/10 hover:bg-primary/20 dark:hover:bg-sky-500/20 px-lg py-sm rounded-full transition-all"
                   >
                     {lang === 'EN' ? 'Register for a Patient Account' : 'Đăng ký tài khoản bệnh nhân'}
                     <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
@@ -288,9 +282,7 @@ export default function Login({ onNavigate }) {
               </div>
             )}
 
-          </div>
-        </section>
-
+        </div>
       </main>
 
     </div>

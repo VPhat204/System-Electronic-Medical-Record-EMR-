@@ -176,8 +176,10 @@ const translations = {
   }
 };
 
-export default function NurseDashboard({ onNavigate, theme: propTheme, setTheme: propSetTheme }) {
-  const [lang, setLang] = useState('vi');
+export default function NurseDashboard({ onNavigate, theme: propTheme, setTheme: propSetTheme, lang: propLang, setLang: propSetLang }) {
+  const [localLang, setLocalLang] = useState('vi');
+  const lang = propLang !== undefined ? propLang : localLang;
+  const setLang = propSetLang !== undefined ? propSetLang : setLocalLang;
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [localTheme, setLocalTheme] = useState(() => localStorage.getItem('theme') || 'light');
 

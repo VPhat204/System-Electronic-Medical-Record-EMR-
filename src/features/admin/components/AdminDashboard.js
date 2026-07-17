@@ -17,12 +17,14 @@ import AdminBackupTab from '../pages/Backup/AdminBackupTab';
 import AdminMaintenanceTab from '../pages/Maintenance/AdminMaintenanceTab';
 import AdminSettingsTab from '../pages/Settings/AdminSettingsTab';
 
-export default function AdminDashboard({ onNavigate, theme: propTheme, setTheme: propSetTheme }) {
-  const [lang, setLang] = useState('vi'); // 'vi' or 'en'
+export default function AdminDashboard({ onNavigate, theme: propTheme, setTheme: propSetTheme, lang: propLang, setLang: propSetLang }) {
+  const [localLang, setLocalLang] = useState('vi');
+  const lang = propLang !== undefined ? propLang : localLang;
+  const setLang = propSetLang !== undefined ? propSetLang : setLocalLang;
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('Performance'); // Default to Performance tab as requested!
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   const [localTheme, setLocalTheme] = useState(() => localStorage.getItem('theme') || 'light');
   const currentTheme = propTheme !== undefined ? propTheme : localTheme;
   const isDark = currentTheme === 'dark';
@@ -218,13 +220,13 @@ export default function AdminDashboard({ onNavigate, theme: propTheme, setTheme:
             const timeString = now.toISOString().slice(0, 10) + ' ' + now.toTimeString().slice(0, 8);
             const newBackup = {
               id: Date.now(),
-              name: `medcore_prod_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}.tar.gz`,
+              name: `medcore_prod_${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}.tar.gz`,
               time: timeString,
               size: '1.21 TB',
               status: 'Success'
             };
             setBackupHistory(prevHistory => [newBackup, ...prevHistory]);
-            
+
             const newLog = {
               id: Date.now(),
               time: timeString,
@@ -246,8 +248,8 @@ export default function AdminDashboard({ onNavigate, theme: propTheme, setTheme:
 
   // Filtered users for User Management Tab
   const filteredUsers = usersList.filter(u => {
-    const matchesSearch = u.name.toLowerCase().includes(userSearch.toLowerCase()) || 
-                          u.email.toLowerCase().includes(userSearch.toLowerCase());
+    const matchesSearch = u.name.toLowerCase().includes(userSearch.toLowerCase()) ||
+      u.email.toLowerCase().includes(userSearch.toLowerCase());
     const matchesRole = userRoleFilter === 'All' || u.role.toLowerCase() === userRoleFilter.toLowerCase();
     const matchesDept = userDeptFilter === 'All' || u.dept.toLowerCase() === userDeptFilter.toLowerCase();
     return matchesSearch && matchesRole && matchesDept;
@@ -255,10 +257,10 @@ export default function AdminDashboard({ onNavigate, theme: propTheme, setTheme:
 
   // Filtered logs for System Logs Tab
   const filteredLogs = logsList.filter(l => {
-    const matchesSearch = l.userName.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          l.actionText.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          l.ip.includes(searchQuery);
-    
+    const matchesSearch = l.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      l.actionText.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      l.ip.includes(searchQuery);
+
     // Type Filter Matcher
     let matchesType = true;
     if (logTypeFilter === 'Login') {
@@ -270,16 +272,16 @@ export default function AdminDashboard({ onNavigate, theme: propTheme, setTheme:
     } else if (logTypeFilter === 'Error') {
       matchesType = l.level === 'ERROR';
     }
-    
+
     return matchesSearch && matchesType;
   });
 
   return (
     <div className="bg-background dark:bg-slate-900 text-on-surface dark:text-slate-100 min-h-screen transition-colors duration-200 flex w-full relative">
-      
+
       {/* Mobile Sidebar overlay */}
       {isSidebarOpen && (
-        <div 
+        <div
           onClick={() => setIsSidebarOpen(false)}
           className="fixed inset-0 z-40 bg-black/40 md:hidden backdrop-blur-xs"
         />
@@ -332,15 +334,15 @@ export default function AdminDashboard({ onNavigate, theme: propTheme, setTheme:
         {/* Bottom actions */}
         <div className="mt-auto p-4 border-t border-outline-variant dark:border-slate-800">
           <nav className="space-y-1">
-            <a 
-              href="#help" 
+            <a
+              href="#help"
               className="w-full flex items-center gap-3 px-2 py-2 text-on-surface-variant dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors text-left"
             >
               <span className="material-symbols-outlined text-[20px]">help</span>
               <span className="font-label-md text-label-md">{t.helpCenter}</span>
             </a>
-            <button 
-              onClick={() => onNavigate('home')} 
+            <button
+              onClick={() => onNavigate('home')}
               className="w-full flex items-center gap-3 px-2 py-2 text-error hover:bg-error-container/20 rounded-md transition-colors text-left"
             >
               <span className="material-symbols-outlined text-[18px]">logout</span>
@@ -352,11 +354,11 @@ export default function AdminDashboard({ onNavigate, theme: propTheme, setTheme:
 
       {/* Main Content Area */}
       <main className="flex-grow md:ml-[260px] flex flex-col h-screen overflow-hidden">
-        
+
         {/* TopNavBar - Preserved Doctor Header style */}
         <header className="flex justify-between items-center h-16 px-6 bg-white dark:bg-slate-950 sticky top-0 z-40 border-b border-outline-variant dark:border-slate-800 transition-colors">
           <div className="flex items-center gap-md w-full max-w-md">
-            <button 
+            <button
               onClick={() => setIsSidebarOpen(true)}
               className="p-2 md:hidden text-on-surface-variant dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
             >
@@ -366,12 +368,12 @@ export default function AdminDashboard({ onNavigate, theme: propTheme, setTheme:
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant dark:text-slate-400">
                 search
               </span>
-              <input 
+              <input
                 type="text"
-                placeholder={lang === 'vi' ? 'Tìm kiếm nhanh...' : 'Search clinical...'} 
+                placeholder={lang === 'vi' ? 'Tìm kiếm nhanh...' : 'Search clinical...'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-surface-container-low dark:bg-slate-900 border border-outline-variant dark:border-slate-700 rounded-full py-2 pl-10 pr-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none font-body-sm text-body-sm text-on-surface dark:text-white transition-all" 
+                className="w-full bg-surface-container-low dark:bg-slate-900 border border-outline-variant dark:border-slate-700 rounded-full py-2 pl-10 pr-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none font-body-sm text-body-sm text-on-surface dark:text-white transition-all"
               />
             </div>
           </div>
@@ -407,7 +409,7 @@ export default function AdminDashboard({ onNavigate, theme: propTheme, setTheme:
             </button>
 
             {/* Emergency */}
-            <button 
+            <button
               onClick={() => alert(lang === 'vi' ? 'Kích hoạt báo động khẩn cấp cấp viện!' : 'Emergency Code Blue Broadcast Triggered!')}
               className="w-10 h-10 flex items-center justify-center rounded-full text-error hover:bg-error-container/20 transition-colors"
               title="Khẩn cấp / Emergency"
@@ -432,10 +434,10 @@ export default function AdminDashboard({ onNavigate, theme: propTheme, setTheme:
 
         {/* Scrollable Canvas Container */}
         <div className="flex-1 overflow-y-auto p-lg bg-surface-container-lowest dark:bg-slate-900 custom-scrollbar text-left">
-          
+
           {/* TAB 1: DASHBOARD VIEW */}
           {activeTab === 'Dashboard' && (
-            <AdminDashboardTab 
+            <AdminDashboardTab
               lang={lang}
               t={t}
               onNavigate={onNavigate}
@@ -598,19 +600,19 @@ export default function AdminDashboard({ onNavigate, theme: propTheme, setTheme:
           <div className="bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 w-full max-w-md p-6 rounded-xl shadow-2xl animate-in zoom-in-95 duration-200 text-left">
             <div className="flex justify-between items-center mb-6">
               <h3 className="font-headline-md text-headline-md text-on-surface dark:text-white">{t.addUser}</h3>
-              <button 
+              <button
                 onClick={() => setShowAddUserModal(false)}
                 className="text-on-surface-variant dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 p-1.5 rounded-full transition-colors"
               >
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
-            
+
             <form onSubmit={handleAddUserSubmit} className="space-y-4">
               <div className="flex flex-col gap-xs">
                 <label className="font-label-md text-label-md text-on-surface-variant dark:text-slate-300">{t.name} *</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={newUserName}
                   onChange={(e) => setNewUserName(e.target.value)}
                   placeholder="e.g. Dr. Arthur Conan"
@@ -621,8 +623,8 @@ export default function AdminDashboard({ onNavigate, theme: propTheme, setTheme:
 
               <div className="flex flex-col gap-xs">
                 <label className="font-label-md text-label-md text-on-surface-variant dark:text-slate-300">{t.email} *</label>
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   value={newUserEmail}
                   onChange={(e) => setNewUserEmail(e.target.value)}
                   placeholder="e.g. a.conan@medcore.com"
@@ -634,7 +636,7 @@ export default function AdminDashboard({ onNavigate, theme: propTheme, setTheme:
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-xs">
                   <label className="font-label-md text-label-md text-on-surface-variant dark:text-slate-300">{t.role}</label>
-                  <select 
+                  <select
                     value={newUserRole}
                     onChange={(e) => setNewUserRole(e.target.value)}
                     className="border border-outline-variant dark:border-slate-700 bg-surface-container-lowest dark:bg-slate-900 rounded-lg p-2.5 outline-none dark:text-white text-body-md"
@@ -645,10 +647,10 @@ export default function AdminDashboard({ onNavigate, theme: propTheme, setTheme:
                     <option value="Technician">Technician</option>
                   </select>
                 </div>
-                
+
                 <div className="flex flex-col gap-xs">
                   <label className="font-label-md text-label-md text-on-surface-variant dark:text-slate-300">{t.department}</label>
-                  <select 
+                  <select
                     value={newUserDept}
                     onChange={(e) => setNewUserDept(e.target.value)}
                     className="border border-outline-variant dark:border-slate-700 bg-surface-container-lowest dark:bg-slate-900 rounded-lg p-2.5 outline-none dark:text-white text-body-md"
@@ -663,15 +665,15 @@ export default function AdminDashboard({ onNavigate, theme: propTheme, setTheme:
               </div>
 
               <div className="pt-6 border-t border-outline-variant dark:border-slate-700 flex justify-end gap-md">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setShowAddUserModal(false)}
                   className="px-4 py-2 border border-outline dark:border-slate-700 text-on-surface dark:text-slate-200 font-label-md rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                 >
                   {t.cancel}
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="px-4 py-2 bg-primary text-white font-label-md rounded-lg hover:bg-surface-tint transition-colors active:scale-95"
                 >
                   {t.save}

@@ -290,7 +290,7 @@ const initialStaff = [
   { id: 3, name: 'George Klein', email: 'g.klein@hospital.com', role: 'Pharmacy Manager', status: 'Suspended', lastLogin: '14 days ago', initials: 'GK' }
 ];
 
-export default function DoctorDashboard({ onNavigate, theme: propTheme, setTheme: propSetTheme }) {
+export default function DoctorDashboard({ onNavigate, theme: propTheme, setTheme: propSetTheme, lang: propLang, setLang: propSetLang }) {
   const [localTheme, setLocalTheme] = useState(() => localStorage.getItem('theme') || 'light');
   const currentTheme = propTheme !== undefined ? propTheme : localTheme;
   const settingsDark = currentTheme === 'dark';
@@ -300,7 +300,9 @@ export default function DoctorDashboard({ onNavigate, theme: propTheme, setTheme
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [commsOpen, setCommsOpen] = useState(false);
-  const [lang, setLang] = useState('vi'); // 'vi' (Vietnamese) or 'en' (English)
+  const [localLang, setLocalLang] = useState('vi');
+  const lang = propLang !== undefined ? propLang : localLang;
+  const setLang = propSetLang !== undefined ? propSetLang : setLocalLang;
 
   const t = translations[lang];
 

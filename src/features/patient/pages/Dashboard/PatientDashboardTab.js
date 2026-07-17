@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useContext } from 'react';
+import { AuthContext } from '../../../auth/context/AuthContext';
 
-export default function PatientDashboardTab({ lang, t, setActiveTab, onOpenBooking }) {
+export default function PatientDashboardTab({ lang, t, setActiveTab, onOpenBooking, localVerified }) {
+  const { user } = useContext(AuthContext);
+
   return (
     <div className="space-y-lg">
       
@@ -9,7 +12,7 @@ export default function PatientDashboardTab({ lang, t, setActiveTab, onOpenBooki
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-md">
           <div>
             <h2 className="font-headline-xl text-headline-xl text-primary dark:text-primary-fixed-dim">
-              {lang === 'vi' ? 'Chào bạn, Nguyễn Văn A' : 'Hello, Nguyen Van A'}
+              {lang === 'vi' ? `Chào bạn, ${user?.fullName || ''}` : `Hello, ${user?.fullName || ''}`}
             </h2>
             <p className="font-body-lg text-body-lg text-on-surface-variant dark:text-slate-400 mt-sm">
               {lang === 'vi' 
@@ -17,10 +20,24 @@ export default function PatientDashboardTab({ lang, t, setActiveTab, onOpenBooki
                 : 'How are you feeling today? Check your latest health updates below.'}
             </p>
           </div>
-          <div className="flex items-center gap-sm px-md py-sm bg-primary-fixed text-on-primary-fixed rounded-xl border border-primary/20">
-            <span className="material-symbols-outlined">verified_user</span>
-            <span className="font-label-md text-label-md">
-              {lang === 'vi' ? 'Tài khoản đã xác thực' : 'Verified Account'}
+          <div
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl border ${
+              localVerified
+                ? "bg-primary/10 border-primary/20 text-primary dark:bg-primary/20 dark:text-primary-fixed-dim"
+                : "bg-amber-100 border-amber-300 text-amber-700 dark:bg-amber-900/30 dark:border-amber-700 dark:text-amber-400"
+            }`}
+          >
+            <span
+              className="material-symbols-outlined"
+              style={localVerified ? { fontVariationSettings: "'FILL' 1" } : {}}
+            >
+              {localVerified ? "verified_user" : "warning"}
+            </span>
+
+            <span className="font-semibold">
+              {localVerified
+                ? (lang === "vi" ? "Tài khoản đã xác thực" : "Account Verified")
+                : (lang === "vi" ? "Chưa xác thực" : "Unverified")}
             </span>
           </div>
         </div>
