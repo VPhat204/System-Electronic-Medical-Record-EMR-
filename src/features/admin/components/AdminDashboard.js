@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { LanguageContext } from '../../../shared/context/LanguageContext';
+import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../../auth/context/AuthContext';
 import AdminDashboardTab from '../pages/Dashboard/AdminDashboardTab';
 import AdminUserManagementTab from '../pages/Users/AdminUserManagementTab';
 import AdminSystemLogsTab from '../pages/SystemLogs/AdminSystemLogsTab';
@@ -11,6 +13,7 @@ import AdminSettingsTab from '../pages/Settings/AdminSettingsTab';
 import AdminSidebar from './AdminSidebar';
 import AdminHeader from './AdminHeader';
 
+
 export default function AdminDashboard({ onNavigate, theme: propTheme, setTheme: propSetTheme, lang: propLang, setLang: propSetLang }) {
   const { t: globalT } = useContext(LanguageContext);
   const [localLang, setLocalLang] = useState('vi');
@@ -20,6 +23,8 @@ export default function AdminDashboard({ onNavigate, theme: propTheme, setTheme:
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [searchQuery, setSearchQuery] = useState('');
 
+  const { logout } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [localTheme, setLocalTheme] = useState(() => localStorage.getItem('theme') || 'light');
   const currentTheme = propTheme !== undefined ? propTheme : localTheme;
   const isDark = currentTheme === 'dark';
@@ -108,6 +113,11 @@ export default function AdminDashboard({ onNavigate, theme: propTheme, setTheme:
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
+
   return (
     <div className="bg-background dark:bg-slate-900 text-on-surface dark:text-slate-100 min-h-screen transition-colors duration-200 flex w-full relative">
       {/* Mobile Sidebar overlay */}
@@ -125,6 +135,7 @@ export default function AdminDashboard({ onNavigate, theme: propTheme, setTheme:
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
         onNavigate={onNavigate}
+        onLogout={handleLogout}
         lang={lang}
         t={t}
       />

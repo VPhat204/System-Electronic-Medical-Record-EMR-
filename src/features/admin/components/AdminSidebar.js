@@ -6,6 +6,7 @@ export default function AdminSidebar({
   isSidebarOpen,
   setIsSidebarOpen,
   onNavigate,
+  onLogout,
   lang,
   t
 }) {
@@ -89,7 +90,7 @@ export default function AdminSidebar({
             <span className="font-label-md text-label-md">{t.helpCenter}</span>
           </a>
           <button
-            onClick={() => onNavigate('home')}
+            onClick={onLogout}
             className="w-full flex items-center gap-3 px-2 py-2 text-error hover:bg-error-container/20 rounded-md transition-colors text-left"
           >
             <span className="material-symbols-outlined text-[18px]">logout</span>
