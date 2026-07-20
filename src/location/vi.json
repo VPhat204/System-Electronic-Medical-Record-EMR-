@@ -1,0 +1,319 @@
+{
+  "navbar": {
+    "home": "Trang chủ",
+    "services": "Dịch vụ",
+    "doctors": "Bác sĩ",
+    "insurance": "Đối tác bảo hiểm",
+    "blogs": "Tin tức y tế",
+    "login": "Đăng nhập",
+    "register": "Đăng ký",
+    "logout": "Đăng xuất",
+    "dashboard": "Bảng điều khiển",
+    "backToPatient": "Quay lại hệ thống Patient"
+  },
+  "hero": {
+    "title": "Chăm Sóc Y Khoa Vượt Trội & An Toàn Người Bệnh",
+    "subtitle": "Trải nghiệm dịch vụ y tế đẳng cấp thế giới tích hợp cổng bệnh nhân EMR hiện đại. Đặt lịch khám tức thì và tìm kiếm chuyên gia trên hơn 40 chuyên khoa.",
+    "bookBtn": "Đặt Lịch Khám",
+    "findBtn": "Tìm Bác Sĩ"
+  },
+  "stats": {
+    "patients": "Bệnh nhân mỗi năm",
+    "doctors": "Bác sĩ chuyên khoa",
+    "beds": "Giường bệnh hiện đại",
+    "emergency": "Cấp cứu 24/7"
+  },
+  "insurance": {
+    "title": "Đối tác Bảo hiểm"
+  },
+  "footer": {
+    "desc": "Cung cấp các dịch vụ y tế đẳng cấp thế giới từ năm 1995. Cam kết an toàn người bệnh, thực hành y đức và đổi mới dịch vụ chăm sóc sức khỏe.",
+    "quickLinks": "Liên kết nhanh",
+    "contact": "Thông tin liên hệ",
+    "newsletter": "Bản tin y tế",
+    "newsletterSub": "Đăng ký nhận những tin tức sức khỏe mới nhất.",
+    "subscribeBtn": "Đăng ký",
+    "emailPlaceholder": "Email của bạn...",
+    "copyright": "Bản quyền thuộc về MedEMR. Bảo lưu mọi quyền.",
+    "address": "123 Đường Sức Khỏe, Quận Y Tế",
+    "phone": "+1 (555) 000-8888",
+    "email": "info@hms-admin.portal",
+    "emergency": "Cấp cứu: 911 (24/7)",
+    "thankYou": "Cảm ơn bạn đã đăng ký nhận bản tin!"
+  },
+  "services": {
+    "title": "Dịch Vụ Y Tế",
+    "subtitle": "Giải pháp chăm sóc sức khỏe chuyên sâu cho mọi giai đoạn cuộc đời.",
+    "viewAll": "Xem tất cả chuyên khoa",
+    "cardiology": {
+      "name": "Khoa Tim Mạch",
+      "desc": "Chẩn đoán và điều trị chuyên sâu các bệnh lý về tim mạch và hệ tuần hoàn với hệ thống can thiệp hiện đại."
+    },
+    "pediatrics": {
+      "name": "Khoa Nhi",
+      "desc": "Chăm sóc sức khỏe toàn diện cho trẻ em từ sơ sinh đến vị thành niên trong môi trường thân thiện."
+    },
+    "neurology": {
+      "name": "Khoa Thần Kinh",
+      "desc": "Nghiên cứu và điều trị các rối loạn hệ thần kinh với công nghệ chẩn đoán hình ảnh 3.0T MRI."
+    },
+    "orthopedics": {
+      "name": "Chấn thương Chỉnh hình",
+      "desc": "Điều trị các bệnh lý cơ xương khớp và phục hồi chức năng sau chấn thương thể thao."
+    },
+    "oncology": {
+      "name": "Khoa Ung Bướu",
+      "desc": "Cá nhân hóa phác đồ điều trị ung thư bằng phương pháp đa mô thức và liệu pháp miễn dịch."
+    },
+    "diagnostics": {
+      "name": "Chẩn Đoán Hình Ảnh & Xét Nghiệm",
+      "desc": "Kết quả chính xác, nhanh chóng với hệ thống phòng Lab đạt tiêu chuẩn quốc tế ISO 15189."
+    },
+    "diagnosticsShort": {
+      "name": "Chẩn Đoán Hình Ảnh",
+      "desc": "Xét nghiệm xét nghiệm và chuẩn đoán hình ảnh chính xác."
+    },
+    "pageTitle": "Dịch Vụ Y Tế Chuyên Sâu",
+    "pageDesc": "Chúng tôi cam kết cung cấp các giải pháp chăm sóc sức khỏe toàn diện với công nghệ tiên tiến nhất và đội ngũ chuyên gia đầu ngành.",
+    "learnMore": "Tìm hiểu thêm",
+    "details": "Chi tiết",
+    "bookConsultation": "Đặt tư vấn",
+    "bookDiagnostic": "Đặt lịch xét nghiệm",
+    "bookBtn": "Đặt Lịch Hẹn",
+    "faqTitle": "Câu Hỏi Thường Gặp",
+    "faqDesc": "Giải đáp nhanh những thắc mắc phổ biến về quy trình khám bệnh tại MedEMR.",
+    "faq": {
+      "q1": "Làm thế nào để đặt lịch khám chuyên khoa?",
+      "a1": "Quý khách có thể đặt lịch qua ứng dụng Patient Portal, gọi đến hotline hoặc nhấn vào nút \"Đặt Lịch Hẹn\" trên trang web. Chúng tôi khuyến khích đặt trước ít nhất 24 giờ.",
+      "q2": "Bệnh viện có chấp nhận bảo hiểm quốc tế không?",
+      "a2": "ClinicalPrecision HMS liên kết với hơn 50 đơn vị bảo hiểm trong và ngoài nước. Vui lòng mang theo thẻ bảo hiểm và giấy tờ tùy thân khi đến khám.",
+      "q3": "Quy trình xét nghiệm tại bệnh viện mất bao lâu?",
+      "a3": "Đối với các xét nghiệm cơ bản, kết quả sẽ có sau 1-2 giờ. Các xét nghiệm chuyên sâu hoặc nuôi cấy vi sinh có thể mất từ 1-3 ngày làm việc.",
+      "q4": "Bệnh viện có dịch vụ cấp cứu 24/7 không?",
+      "a4": "Có, trung tâm cấp cứu của chúng tôi hoạt động 24/7 với đội ngũ bác sĩ trực chiến và xe cứu thương trang bị đầy đủ thiết bị hồi sức cấp cứu."
+    }
+  },
+  "doctors": {
+    "title": "Gặp Gỡ Các Chuyên Gia",
+    "subtitle": "Đội ngũ chuyên gia đa ngành của chúng tôi được công nhận trên toàn cầu về sự xuất sắc lâm sàng và các nghiên cứu đột phá.",
+    "pageTitle": "Đội Ngũ Bác Sĩ Chuyên Khoa",
+    "pageDesc": "Tại ClinicalPrecision HMS, chúng tôi quy tụ những chuyên gia y tế hàng đầu với cam kết mang lại sự chăm sóc tâm huyết và hiệu quả nhất. Mọi quyết định điều trị đều dựa trên nền tảng y học thực chứng và công nghệ tiên tiến nhất.",
+    "searchPlaceholder": "Tìm tên bác sĩ hoặc chuyên khoa...",
+    "searchLabel": "Tìm theo tên",
+    "deptLabel": "Chuyên khoa",
+    "locLabel": "Địa điểm",
+    "allDepts": "Tất cả chuyên khoa",
+    "allLocs": "Tất cả cơ sở",
+    "filterBtn": "Áp dụng bộ lọc",
+    "noResults": "Không tìm thấy bác sĩ nào phù hợp với bộ lọc đã chọn.",
+    "bookBtn": "Đặt Lịch Hẹn",
+    "specialty": {
+      "Chief Cardiologist": "Chuyên gia Tim mạch học",
+      "Senior Pediatrician": "Chuyên khoa Nhi",
+      "Neurology Specialist": "Chuyên khoa Thần kinh",
+      "Orthopedic Surgeon": "Phẫu thuật Ngoại chấn thương",
+      "Chuyên gia Tim mạch học": "Chuyên gia Tim mạch học",
+      "Chuyên khoa Nội tiết": "Chuyên khoa Nội tiết",
+      "Nhi Khoa Tổng quát": "Nhi Khoa Tổng quát",
+      "Phẫu thuật Ngoại thần kinh": "Phẫu thuật Ngoại thần kinh",
+      "Chuyên khoa Ung bướu": "Chuyên khoa Ung bướu",
+      "Da liễu & Thẩm mỹ": "Da liễu & Thẩm mỹ"
+    },
+    "department": {
+      "Cardiology": "Tim mạch",
+      "Pediatrics": "Nhi khoa",
+      "Neurology": "Thần kinh",
+      "Orthopedics": "Chấn thương chỉnh hình",
+      "Oncology": "Ung bướu",
+      "Diagnostics": "Chẩn đoán hình ảnh",
+      "Tim mạch": "Tim mạch",
+      "Nội endocrine": "Nội tiết",
+      "Nhi khoa": "Nhi khoa",
+      "Thần kinh": "Thần kinh",
+      "Ung bướu": "Ung bướu",
+      "Da liễu": "Da liễu"
+    },
+    "location": {
+      "Cơ sở Quận 1": "Cơ sở Quận 1",
+      "Cơ sở Quận 7": "Cơ sở Quận 7",
+      "Trung tâm Kỹ thuật cao": "Trung tâm Kỹ thuật cao"
+    },
+    "experience": {
+      "22 năm kinh nghiệm": "22 năm kinh nghiệm",
+      "15 năm kinh nghiệm": "15 năm kinh nghiệm",
+      "10 năm kinh nghiệm": "10 năm kinh nghiệm",
+      "18 năm kinh nghiệm": "18 năm kinh nghiệm",
+      "25 năm kinh nghiệm": "25 năm kinh nghiệm",
+      "8 năm kinh nghiệm": "8 năm kinh nghiệm",
+      "20+ Years Experience": "Hơn 20 năm kinh nghiệm",
+      "15+ Years Experience": "Hơn 15 năm kinh nghiệm",
+      "12+ Years Experience": "Hơn 12 năm kinh nghiệm",
+      "18+ Years Experience": "Hơn 18 năm kinh nghiệm"
+    },
+    "titleLabel": {
+      "Trưởng khoa": "Trưởng khoa",
+      "Chief Cardiologist": "Trưởng khoa Tim mạch"
+    },
+    "certBadge": "100% Chứng Chỉ Quốc Tế",
+    "deptBadge": "Hơn 50 Chuyên Khoa"
+  },
+  "blogs": {
+    "title": "Trung Tâm Kiến Thức Sức Khỏe",
+    "readMore": "Đọc bài viết",
+    "wellness": "Sức khỏe lành mạnh",
+    "nutrition": "Dinh dưỡng",
+    "innovation": "Sáng tạo",
+    "alert": "Cảnh báo dịch",
+    "pageTitle": "Trung Tâm Tài Nguyên Sức Khỏe",
+    "featured": {
+      "title": "Phương Pháp Hiện Đại Về Sức Khỏe Tâm Thần & Tỉnh Thức",
+      "desc": "Khám phá cách các chương trình tỉnh thức lâm sàng đang cách mạng hóa liệu pháp ngoại trú để kiểm soát căng thẳng và lo âu kéo dài."
+    },
+    "articles": {
+      "dietary": {
+        "title": "Thói Quen Ăn Uống Cho Trái Tim Khỏe Mạnh",
+        "desc": "Những thay đổi đơn giản giúp giảm đáng kể nguy cơ biến cố tim mạch."
+      },
+      "genetic": {
+        "title": "Tương Lai Của Bản Đồ Gen Người",
+        "desc": "Y học cá thể hóa đang thay đổi cách điều trị các bệnh hiếm gặp như thế nào."
+      },
+      "flu": {
+        "title": "Cẩm Nang Phòng Flu Mùa Đông 2024",
+        "desc": "Tất cả những điều bạn cần biết về các chủng cúm năm nay và lịch tiêm chủng phòng bệnh."
+      }
+    }
+  },
+  "login": {
+    "title": "Đăng Nhập EMR Portal",
+    "identityLabel": "Email hoặc Tên tài khoản",
+    "identityPlaceholder": "Nhập email hoặc username...",
+    "passwordLabel": "Mật khẩu",
+    "passwordPlaceholder": "Nhập mật khẩu...",
+    "rememberMe": "Duy trì đăng nhập",
+    "forgotPassword": "Quên mật khẩu?",
+    "submitBtn": "Đăng Nhập",
+    "loggingIn": "Đang đăng nhập...",
+    "registerPrompt": "Bệnh nhân chưa có tài khoản?",
+    "registerBtn": "Đăng ký tài khoản bệnh nhân",
+    "validation": {
+      "identityRequired": "Email hoặc Tên tài khoản là bắt buộc.",
+      "passwordRequired": "Mật khẩu là bắt buộc.",
+      "passwordLength": "Mật khẩu phải dài ít nhất 6 ký tự."
+    },
+    "successRedirect": "Đăng nhập thành công! Đang chuyển hướng...",
+    "invalidCredentials": "Tài khoản hoặc mật khẩu không chính xác."
+  },
+  "register": {
+    "title": "Đăng Ký Tài Khoản Bệnh Nhân",
+    "fullNameLabel": "Họ và Tên",
+    "fullNamePlaceholder": "Nhập họ và tên...",
+    "emailLabel": "Địa chỉ Email",
+    "emailPlaceholder": "Nhập email...",
+    "usernameLabel": "Tên tài khoản",
+    "usernamePlaceholder": "Nhập username...",
+    "passwordLabel": "Mật khẩu",
+    "passwordPlaceholder": "Nhập mật khẩu (tối thiểu 6 ký tự)...",
+    "phoneLabel": "Số điện thoại",
+    "phonePlaceholder": "Nhập số điện thoại...",
+    "submitBtn": "Đăng Ký",
+    "registering": "Đang đăng ký...",
+    "loginPrompt": "Đã có tài khoản?",
+    "loginLink": "Đăng nhập ngay",
+    "backHome": "Quay lại Trang chủ",
+    "validation": {
+      "fullNameRequired": "Họ và tên là bắt buộc.",
+      "emailRequired": "Email là bắt buộc.",
+      "emailInvalid": "Định dạng email không hợp lệ.",
+      "usernameRequired": "Tên tài khoản là bắt buộc.",
+      "usernameLength": "Tên tài khoản phải dài ít nhất 4 ký tự.",
+      "passwordRequired": "Mật khẩu là bắt buộc.",
+      "passwordLength": "Mật khẩu phải dài ít nhất 6 ký tự.",
+      "phoneRequired": "Số điện thoại là bắt buộc.",
+      "phoneInvalid": "Số điện thoại phải từ 10-11 chữ số."
+    },
+    "successMsg": "Đăng ký thành công! Đang chuyển hướng đến trang Đăng nhập...",
+    "sidebarTitle": "Đăng ký Bệnh nhân",
+    "sidebarDesc": "Vui lòng hoàn thành các bước sau để khởi tạo hồ sơ bệnh án điện tử của bạn.",
+    "stepLabel": "Bước",
+    "step1Title": "Thông tin Cá nhân",
+    "step2Title": "Chi tiết Liên hệ",
+    "step3Title": "Bảo mật Tài khoản",
+    "hipaaLabel": "Mã hóa dữ liệu chuẩn HIPAA",
+    "personalInfo": "Thông tin Cá nhân",
+    "dobLabel": "Ngày sinh",
+    "genderLabel": "Giới tính",
+    "selectGender": "Chọn giới tính",
+    "male": "Nam",
+    "female": "Nữ",
+    "nonBinary": "Khác",
+    "preferNotToSay": "Không muốn tiết lộ",
+    "idNumberLabel": "Số CMND/CCCD/Hộ chiếu",
+    "contactDetails": "Chi tiết Liên hệ",
+    "basicContact": "Liên hệ cơ bản",
+    "phoneLabel": "Số điện thoại di động *",
+    "emailLabel": "Địa chỉ Email *",
+    "permanentAddress": "Địa chỉ thường trú",
+    "provinceLabel": "Tỉnh/Thành phố *",
+    "selectProvince": "Chọn Tỉnh/Thành phố",
+    "districtLabel": "Quận/Huyện *",
+    "selectDistrict": "Chọn Quận/Huyện",
+    "wardLabel": "Phường/Xã *",
+    "selectWard": "Chọn Phường/Xã",
+    "streetLabel": "Số nhà, Tên đường *",
+    "streetPlaceholder": "Ví dụ: 123 Đường Lê Lợi",
+    "emergencyContact": "Liên hệ khẩn cấp",
+    "emergencyNameLabel": "Họ và tên người thân *",
+    "emergencyNamePlaceholder": "Nhập họ và tên",
+    "emergencyRelationshipLabel": "Mối quan hệ *",
+    "selectRelationship": "Chọn mối quan hệ",
+    "relParent": "Bố/Mẹ",
+    "relSpouse": "Vợ/Chồng",
+    "relChild": "Con",
+    "relSibling": "Anh/Chị/Em",
+    "relOther": "Khác",
+    "emergencyPhoneLabel": "Số điện thoại liên hệ khẩn cấp *",
+    "accountSecurity": "Bảo mật Tài khoản",
+    "dataSafeBadge": "Dữ liệu an toàn",
+    "usernameLabel": "Tên đăng nhập (Mặc định là Số điện thoại)",
+    "newPasswordLabel": "Mật khẩu mới",
+    "passwordPlaceholder": "Nhập mật khẩu",
+    "confirmPasswordLabel": "Xác nhận mật khẩu *",
+    "confirmPasswordPlaceholder": "Xác nhận mật khẩu",
+    "securityQuestionLabel": "Câu hỏi bảo mật",
+    "selectQuestion": "Chọn câu hỏi bảo mật",
+    "qPet": "Tên con thú cưng đầu tiên của bạn là gì?",
+    "qCity": "Bạn sinh ra ở thành phố nào?",
+    "qMother": "Tên thời con gái của mẹ bạn là gì?",
+    "qFood": "Món ăn yêu thích của bạn thời thơ ấu là gì?",
+    "securityAnswerLabel": "Câu trả lời bảo mật",
+    "securityAnswerPlaceholder": "Câu trả lời của bạn",
+    "termsLabel": "Tôi đồng ý với các ",
+    "termsLink": "Điều khoản Dịch vụ",
+    "andLabel": " và ",
+    "privacyLink": "Chính sách Bảo mật HIPAA",
+    "termsNote": ". Tôi hiểu rằng thông tin của mình sẽ được lưu trữ an toàn.",
+    "prevBtn": "Quay lại",
+    "nextBtn": "Tiếp theo",
+    "processing": "Đang xử lý...",
+    "completeBtn": "Hoàn tất Đăng ký",
+    "footerCopyright": "© 2026 MedCore Systems. Giao diện tuân thủ HIPAA.",
+    "privacyPolicy": "Chính sách bảo mật",
+    "securityStandards": "Tiêu chuẩn bảo mật",
+    "support": "Hỗ trợ"
+  },
+  "forgot": {
+    "title": "Khôi Phục Mật Khẩu EMR",
+    "desc": "Nhập địa chỉ email đã đăng ký của bạn. Chúng tôi sẽ gửi mã OTP khôi phục mật khẩu.",
+    "emailLabel": "Địa chỉ Email",
+    "emailPlaceholder": "Nhập email của bạn...",
+    "submitBtn": "Gửi OTP",
+    "sending": "Đang gửi...",
+    "backLogin": "Quay lại Đăng nhập",
+    "validation": {
+      "emailRequired": "Vui lòng nhập địa chỉ email.",
+      "emailInvalid": "Định dạng email không hợp lệ."
+    },
+    "successMsg": "Mã OTP đã được gửi thành công! Vui lòng kiểm tra email."
+  }
+}

@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+import { LanguageContext } from '../shared/context/LanguageContext';
 
 export default function Footer() {
+  const { t } = useContext(LanguageContext);
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
   const [error, setError] = useState('');
@@ -8,13 +10,13 @@ export default function Footer() {
   const handleSubscribe = (e) => {
     e.preventDefault();
     if (!email) {
-      setError('Please enter your email.');
+      setError(t('footer.validation.emailRequired') || 'Please enter your email.');
       return;
     }
     // Simple email regex validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address.');
+      setError(t('footer.validation.emailInvalid') || 'Please enter a valid email address.');
       return;
     }
 
@@ -38,59 +40,59 @@ export default function Footer() {
               medical_services
             </span>
             <span className="font-headline-sm text-headline-sm font-bold text-white">
-              HMS Admin
+              MedEMR
             </span>
           </div>
           <p className="font-body-sm text-body-sm text-surface-variant dark:text-slate-400">
-            Providing world-class medical services since 1995. Committed to patient safety, ethical practice, and innovative healthcare.
+            {t('footer.desc')}
           </p>
         </div>
 
         {/* Quick Links Column */}
         <div>
-          <h6 className="font-label-md text-label-md mb-md text-white">Quick Links</h6>
+          <h6 className="font-label-md text-label-md mb-md text-white">{t('footer.quickLinks')}</h6>
           <ul className="font-body-sm text-body-sm flex flex-col gap-sm text-surface-variant dark:text-slate-400">
-            <li><a className="hover:text-primary-fixed dark:hover:text-white transition-colors" href="#about">About Us</a></li>
-            <li><a className="hover:text-primary-fixed dark:hover:text-white transition-colors" href="#doctors">Our Doctors</a></li>
-            <li><a className="hover:text-primary-fixed dark:hover:text-white transition-colors" href="#services">Medical Services</a></li>
-            <li><a className="hover:text-primary-fixed dark:hover:text-white transition-colors" href="#404">Patient Portal</a></li>
+            <li><a className="hover:text-primary-fixed dark:hover:text-white transition-colors" href="#about">{t('navbar.home')}</a></li>
+            <li><a className="hover:text-primary-fixed dark:hover:text-white transition-colors" href="#doctors">{t('navbar.doctors')}</a></li>
+            <li><a className="hover:text-primary-fixed dark:hover:text-white transition-colors" href="#services">{t('navbar.services')}</a></li>
+            <li><a className="hover:text-primary-fixed dark:hover:text-white transition-colors" href="#blogs">{t('navbar.blogs')}</a></li>
           </ul>
         </div>
 
         {/* Contact Column */}
         <div>
-          <h6 className="font-label-md text-label-md mb-md text-white">Contact Info</h6>
+          <h6 className="font-label-md text-label-md mb-md text-white">{t('footer.contact')}</h6>
           <ul className="font-body-sm text-body-sm flex flex-col gap-sm text-surface-variant dark:text-slate-400">
             <li className="flex items-center gap-xs">
-              <span className="material-symbols-outlined text-[16px] text-primary-fixed">location_on</span> 
-              123 Healthcare Way, Medical District
+              <span className="material-symbols-outlined text-[16px] text-primary-fixed shrink-0">location_on</span> 
+              <span className="truncate">{t('footer.address')}</span>
             </li>
             <li className="flex items-center gap-xs">
-              <span className="material-symbols-outlined text-[16px] text-primary-fixed">phone</span> 
-              +1 (555) 000-8888
+              <span className="material-symbols-outlined text-[16px] text-primary-fixed shrink-0">phone</span> 
+              <span>{t('footer.phone')}</span>
             </li>
             <li className="flex items-center gap-xs">
-              <span className="material-symbols-outlined text-[16px] text-primary-fixed">mail</span> 
-              info@hms-admin.portal
+              <span className="material-symbols-outlined text-[16px] text-primary-fixed shrink-0">mail</span> 
+              <span className="truncate">{t('footer.email')}</span>
             </li>
             <li className="flex items-center gap-xs text-red-400 font-semibold">
-              <span className="material-symbols-outlined text-[16px]">emergency</span> 
-              Emergency: 911 (24/7)
+              <span className="material-symbols-outlined text-[16px] shrink-0">emergency</span> 
+              <span>{t('footer.emergency')}</span>
             </li>
           </ul>
         </div>
 
         {/* Newsletter Column */}
         <div>
-          <h6 className="font-label-md text-label-md mb-md text-white">Newsletter</h6>
+          <h6 className="font-label-md text-label-md mb-md text-white">{t('footer.newsletter')}</h6>
           <p className="font-body-sm text-body-sm text-surface-variant dark:text-slate-400 mb-md">
-            Stay updated with the latest health news.
+            {t('footer.newsletterSub')}
           </p>
           
           {subscribed ? (
             <div className="bg-green-950/40 border border-green-500/50 text-green-300 p-sm rounded text-body-sm flex items-center gap-xs animate-pulse">
-              <span className="material-symbols-outlined text-[16px]">check_circle</span>
-              Thank you for subscribing!
+              <span className="material-symbols-outlined text-[16px] shrink-0">check_circle</span>
+              {t('footer.thankYou')}
             </div>
           ) : (
             <form onSubmit={handleSubscribe} className="flex flex-col gap-xs">
@@ -98,29 +100,26 @@ export default function Footer() {
                 <input 
                   type="email" 
                   value={email}
-                  onChange={(e) => { setEmail(e.target.value); setError(''); }}
-                  placeholder="Email address" 
-                  className="bg-transparent border-none text-white text-body-sm flex-1 px-md py-sm focus:ring-0 outline-none placeholder-slate-400"
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder={t('footer.emailPlaceholder')}
+                  className="bg-transparent text-white px-md py-sm text-body-md outline-none flex-grow placeholder-white/40 min-w-0"
                 />
-                <button type="submit" className="bg-primary-container hover:bg-primary px-md py-sm transition-colors flex items-center justify-center">
-                  <span className="material-symbols-outlined text-white text-[18px]">send</span>
+                <button 
+                  type="submit"
+                  className="bg-primary-fixed text-on-primary-fixed px-md hover:bg-primary hover:text-white font-label-md text-label-md transition-colors cursor-pointer"
+                >
+                  {t('footer.subscribeBtn')}
                 </button>
               </div>
-              {error && (
-                <div className="text-red-400 text-body-sm mt-[2px] flex items-center gap-xs">
-                  <span className="material-symbols-outlined text-[14px]">error</span>
-                  {error}
-                </div>
-              )}
+              {error && <p className="text-red-400 text-xs font-semibold ml-xs">{error}</p>}
             </form>
           )}
         </div>
 
       </div>
-      
-      {/* Footer Bottom copyright */}
-      <div className="container mx-auto px-lg pt-lg border-t border-white/10 dark:border-slate-800 text-center font-body-sm text-body-sm text-surface-variant dark:text-slate-500">
-        © 2026 HMS Institutional Portal. All Rights Reserved. Managed by EMR Admin Console.
+
+      <div className="container mx-auto px-lg border-t border-white/10 pt-lg text-center font-body-sm text-body-sm text-surface-variant dark:text-slate-500">
+        <p>{t('footer.copyright')}</p>
       </div>
     </footer>
   );

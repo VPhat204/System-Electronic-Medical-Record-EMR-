@@ -1,9 +1,10 @@
 import React, { useState, useContext } from 'react';
 import { ToastContext } from '../../../shared/context/ToastContext';
+import { LanguageContext } from '../../../shared/context/LanguageContext';
 
 export default function ForgotPassword({ onNavigate }) {
   const { success, error } = useContext(ToastContext);
-  const [lang, setLang] = useState('VN'); // 'EN' or 'VN'
+  const { lang, setLang, t } = useContext(LanguageContext);
   const [step, setStep] = useState(1); // 1: enter email, 2: enter OTP & new password
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
@@ -16,7 +17,7 @@ export default function ForgotPassword({ onNavigate }) {
   const handleRequestOtp = async (e) => {
     e.preventDefault();
     if (!email) {
-      error(lang === 'EN' ? 'Email is required' : 'Địa chỉ Email là bắt buộc.');
+      error(t('forgot.validation.emailRequired'));
       return;
     }
     setLoading(true);
@@ -29,7 +30,7 @@ export default function ForgotPassword({ onNavigate }) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Error occurred');
       
-      success(lang === 'EN' ? 'OTP sent successfully!' : 'Mã OTP khôi phục mật khẩu đã được gửi đến email của bạn.');
+      success(t('forgot.successMsg'));
       setStep(2);
     } catch (err) {
       error(err.message || 'Error occurred');
@@ -41,15 +42,15 @@ export default function ForgotPassword({ onNavigate }) {
   const handleResetPassword = async (e) => {
     e.preventDefault();
     if (!otp || !password || !confirmPassword) {
-      error(lang === 'EN' ? 'All fields are required' : 'Vui lòng điền đầy đủ các thông tin.');
+      error(lang === 'en' ? 'All fields are required' : 'Vui lòng điền đầy đủ các thông tin.');
       return;
     }
     if (password.length < 6) {
-      error(lang === 'EN' ? 'Password must be at least 6 characters' : 'Mật khẩu phải dài ít nhất 6 ký tự.');
+      error(lang === 'en' ? 'Password must be at least 6 characters' : 'Mật khẩu phải dài ít nhất 6 ký tự.');
       return;
     }
     if (password !== confirmPassword) {
-      error(lang === 'EN' ? 'Passwords do not match' : 'Mật khẩu xác nhận không khớp.');
+      error(lang === 'en' ? 'Passwords do not match' : 'Mật khẩu xác nhận không khớp.');
       return;
     }
     setLoading(true);
@@ -62,7 +63,7 @@ export default function ForgotPassword({ onNavigate }) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Error occurred');
 
-      success(lang === 'EN' ? 'Password updated successfully!' : 'Đổi mật khẩu thành công! Đang chuyển hướng...');
+      success(lang === 'en' ? 'Password updated successfully!' : 'Đổi mật khẩu thành công! Đang chuyển hướng...');
       setTimeout(() => {
         onNavigate('login');
       }, 1500);
@@ -86,11 +87,11 @@ export default function ForgotPassword({ onNavigate }) {
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-teal-500/20 dark:bg-teal-500/35 blur-[120px] pointer-events-none z-0 animate-pulse" />
       
       {/* Language Switcher (Top Right) */}
-      <div className="fixed top-lg right-lg z-50 flex gap-sm bg-surface-container-low dark:bg-slate-800 p-xs rounded shadow-sm border border-outline-variant dark:border-slate-700 transition-colors duration-200">
+      <div className="fixed top-lg right-lg z-50 flex gap-sm bg-surface-container-low dark:bg-slate-800 p-xs rounded shadow-sm border border-outline-variant dark:border-slate-700 transition-colors duration-200 select-none">
         <button 
-          onClick={() => setLang('EN')}
-          className={`px-sm py-xs font-label-md text-label-md rounded shadow-sm transition-all ${
-            lang === 'EN' 
+          onClick={() => setLang('en')}
+          className={`px-sm py-xs font-label-md text-label-md rounded shadow-sm transition-all cursor-pointer ${
+            lang === 'en' 
               ? 'text-primary dark:text-sky-400 bg-surface-container-lowest dark:bg-slate-700 font-semibold' 
               : 'text-on-surface-variant dark:text-slate-400 hover:text-primary'
           }`}
@@ -98,9 +99,9 @@ export default function ForgotPassword({ onNavigate }) {
           EN
         </button>
         <button 
-          onClick={() => setLang('VN')}
-          className={`px-sm py-xs font-label-md text-label-md rounded shadow-sm transition-all ${
-            lang === 'VN' 
+          onClick={() => setLang('vi')}
+          className={`px-sm py-xs font-label-md text-label-md rounded shadow-sm transition-all cursor-pointer ${
+            lang === 'vi' || lang === 'vn'
               ? 'text-primary dark:text-sky-400 bg-surface-container-lowest dark:bg-slate-700 font-semibold' 
               : 'text-on-surface-variant dark:text-slate-400 hover:text-primary'
           }`}
@@ -118,15 +119,15 @@ export default function ForgotPassword({ onNavigate }) {
           className="absolute top-4 left-4 inline-flex items-center gap-1 font-semibold text-xs text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-sky-400 transition-colors cursor-pointer z-20"
         >
           <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-          {lang === 'EN' ? 'Back to Login' : 'Quay lại Đăng nhập'}
+          {t('forgot.backLogin')}
         </button>
 
-        <div className="w-full mx-auto mt-4">
+        <div className="w-full mx-auto mt-4 text-left">
 
           {/* Logo Header */}
-          <div className="flex flex-col items-center gap-sm mb-lg text-center">
-            <div className="flex items-center gap-md cursor-pointer hover:scale-105 transition-transform" onClick={() => onNavigate('home')}>
-              <span className="material-symbols-outlined text-primary dark:text-sky-400 text-headline-xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+          <div className="flex flex-col items-center gap-sm mb-lg text-center select-none">
+            <div className="flex items-center gap-md cursor-pointer hover:scale-105 transition-transform animate-in fade-in duration-300" onClick={() => onNavigate('home')}>
+              <span className="material-symbols-outlined text-primary dark:text-sky-400 text-headline-xl animate-bounce" style={{ fontVariationSettings: "'FILL' 1" }}>
                 medical_services
               </span>
               <h1 className="font-headline-md text-headline-md font-semibold text-slate-900 dark:text-white">
@@ -137,15 +138,13 @@ export default function ForgotPassword({ onNavigate }) {
 
           <div>
             <header className="mb-xl">
-              <h2 className="font-headline-lg text-headline-lg text-on-surface dark:text-white mb-xs">
-                {lang === 'EN' ? 'Password Recovery' : 'Khôi phục Mật khẩu'}
+              <h2 className="font-headline-lg text-headline-lg text-on-surface dark:text-white mb-xs min-h-[32px]">
+                {t('forgot.title')}
               </h2>
-              <p className="font-body-md text-body-md text-on-surface-variant dark:text-slate-400">
+              <p className="font-body-md text-body-md text-on-surface-variant dark:text-slate-400 min-h-[48px]">
                 {step === 1 
-                  ? (lang === 'EN' 
-                    ? 'Enter your registered email address to receive password reset OTP.' 
-                    : 'Nhập địa chỉ email đăng ký của bạn để nhận mã xác thực OTP.')
-                  : (lang === 'EN' 
+                  ? t('forgot.desc')
+                  : (lang === 'en' 
                     ? 'Check your inbox for OTP, and enter your new password.'
                     : 'Kiểm tra hộp thư để lấy mã OTP, và điền mật khẩu mới của bạn.')
                 }
@@ -155,8 +154,8 @@ export default function ForgotPassword({ onNavigate }) {
             {step === 1 ? (
               <form onSubmit={handleRequestOtp} className="space-y-lg">
                 <div className="space-y-xs">
-                  <label className="block font-label-md text-label-md text-on-surface-variant dark:text-slate-300" htmlFor="email">
-                    Email
+                  <label className="block font-label-md text-label-md text-on-surface-variant dark:text-slate-300 select-none" htmlFor="email">
+                    {t('forgot.emailLabel')}
                   </label>
                   <div className="relative group">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant dark:text-slate-400 transition-colors duration-200 group-focus-within:text-primary">
@@ -165,7 +164,7 @@ export default function ForgotPassword({ onNavigate }) {
                     <input 
                       type="email"
                       id="email" 
-                      placeholder="username@gmail.com"
+                      placeholder={t('forgot.emailPlaceholder')}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -177,13 +176,13 @@ export default function ForgotPassword({ onNavigate }) {
                 <button 
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-primary hover:bg-primary/90 dark:bg-sky-600 dark:hover:bg-sky-500 text-white py-md rounded-lg font-label-md text-label-md uppercase tracking-wider shadow-sm hover:shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-sm disabled:opacity-50"
+                  className="w-full bg-primary hover:bg-primary/90 dark:bg-sky-600 dark:hover:bg-sky-500 text-white py-md rounded-lg font-label-md text-label-md uppercase tracking-wider shadow-sm hover:shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-sm disabled:opacity-50 cursor-pointer"
                 >
                   {loading ? (
                     <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
                   ) : (
                     <>
-                      {lang === 'EN' ? 'Send OTP Code' : 'Gửi mã xác thực OTP'}
+                      {t('forgot.submitBtn')}
                       <span className="material-symbols-outlined text-[20px]">send</span>
                     </>
                   )}
@@ -193,8 +192,8 @@ export default function ForgotPassword({ onNavigate }) {
               <form onSubmit={handleResetPassword} className="space-y-lg">
                 {/* OTP Code field */}
                 <div className="space-y-xs">
-                  <label className="block font-label-md text-label-md text-on-surface-variant dark:text-slate-300" htmlFor="otp">
-                    {lang === 'EN' ? 'OTP Verification Code' : 'Mã xác thực OTP'}
+                  <label className="block font-label-md text-label-md text-on-surface-variant dark:text-slate-300 select-none" htmlFor="otp">
+                    {lang === 'en' ? 'OTP Verification Code' : 'Mã xác thực OTP'}
                   </label>
                   <div className="relative group">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant dark:text-slate-400 transition-colors duration-200 group-focus-within:text-primary">
@@ -215,8 +214,8 @@ export default function ForgotPassword({ onNavigate }) {
 
                 {/* New Password field */}
                 <div className="space-y-xs">
-                  <label className="block font-label-md text-label-md text-on-surface-variant dark:text-slate-300" htmlFor="password">
-                    {lang === 'EN' ? 'New Password' : 'Mật khẩu mới'}
+                  <label className="block font-label-md text-label-md text-on-surface-variant dark:text-slate-300 select-none" htmlFor="password">
+                    {lang === 'en' ? 'New Password' : 'Mật khẩu mới'}
                   </label>
                   <div className="relative group">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant dark:text-slate-400 transition-colors duration-200 group-focus-within:text-primary">
@@ -234,7 +233,7 @@ export default function ForgotPassword({ onNavigate }) {
                     <button 
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-md top-1/2 -translate-y-1/2 text-on-surface-variant dark:text-slate-400 hover:text-on-surface dark:hover:text-white transition-colors"
+                      className="absolute right-md top-1/2 -translate-y-1/2 text-on-surface-variant dark:text-slate-400 hover:text-on-surface dark:hover:text-white transition-colors cursor-pointer"
                     >
                       <span className="material-symbols-outlined">
                         {showPassword ? 'visibility_off' : 'visibility'}
@@ -245,8 +244,8 @@ export default function ForgotPassword({ onNavigate }) {
 
                 {/* Confirm Password field */}
                 <div className="space-y-xs">
-                  <label className="block font-label-md text-label-md text-on-surface-variant dark:text-slate-300" htmlFor="confirmPassword">
-                    {lang === 'EN' ? 'Confirm New Password' : 'Xác nhận mật khẩu mới'}
+                  <label className="block font-label-md text-label-md text-on-surface-variant dark:text-slate-300 select-none" htmlFor="confirmPassword">
+                    {lang === 'en' ? 'Confirm New Password' : 'Xác nhận mật khẩu mới'}
                   </label>
                   <div className="relative group">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant dark:text-slate-400 transition-colors duration-200 group-focus-within:text-primary">
@@ -267,13 +266,13 @@ export default function ForgotPassword({ onNavigate }) {
                 <button 
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-primary hover:bg-primary/90 dark:bg-sky-600 dark:hover:bg-sky-500 text-white py-md rounded-lg font-label-md text-label-md uppercase tracking-wider shadow-sm hover:shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-sm disabled:opacity-50"
+                  className="w-full bg-primary hover:bg-primary/90 dark:bg-sky-600 dark:hover:bg-sky-500 text-white py-md rounded-lg font-label-md text-label-md uppercase tracking-wider shadow-sm hover:shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-sm disabled:opacity-50 cursor-pointer"
                 >
                   {loading ? (
                     <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
                   ) : (
                     <>
-                      {lang === 'EN' ? 'Update Password' : 'Cập nhật mật khẩu'}
+                      {lang === 'en' ? 'Update Password' : 'Cập nhật mật khẩu'}
                       <span className="material-symbols-outlined text-[20px]">save</span>
                     </>
                   )}
@@ -282,7 +281,7 @@ export default function ForgotPassword({ onNavigate }) {
             )}
 
             <footer className="mt-xl pt-xl border-t border-outline-variant dark:border-slate-800 text-center">
-              <p className="font-body-sm text-body-sm text-on-surface-variant dark:text-slate-500 opacity-50">
+              <p className="font-body-sm text-body-sm text-on-surface-variant dark:text-slate-500 opacity-50 select-none">
                 © 2026 MedCore Systems. HIPAA Compliant Interface.
               </p>
             </footer>

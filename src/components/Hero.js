@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useContext } from 'react';
+import { LanguageContext } from '../shared/context/LanguageContext';
 
 export default function Hero({ onOpenBooking, onFindDoctor }) {
+  const { t } = useContext(LanguageContext);
+
   return (
     <header className="relative h-[600px] overflow-hidden flex items-center">
       {/* Background Image with brightness overlay */}
@@ -18,25 +21,25 @@ export default function Hero({ onOpenBooking, onFindDoctor }) {
       <div className="container mx-auto px-lg relative z-10">
         <div className="max-w-2xl glass-card p-md sm:p-xl rounded-xl border-none shadow-2xl transition-all duration-300">
           <h2 className="font-headline-xl text-headline-xl text-on-surface dark:text-white mb-md leading-tight">
-            Excellence in Clinical Care &amp; Patient Safety
+            {t('hero.title')}
           </h2>
-          <p className="font-body-lg text-body-lg text-on-surface-variant dark:text-slate-200 mb-xl">
-            Access world-class medical expertise with HMS Admin Console's integrated patient portal. Book appointments instantly and find specialists across 40+ departments.
+          <p className="font-body-lg text-body-lg text-on-surface-variant dark:text-slate-200 mb-xl min-h-[80px]">
+            {t('hero.subtitle')}
           </p>
           <div className="flex flex-col sm:flex-row gap-md">
             <button 
               onClick={onOpenBooking}
-              className="flex items-center justify-center gap-sm px-xl py-md bg-primary-container text-white font-label-md text-label-md rounded-lg shadow-lg hover:bg-primary hover:shadow-xl transition-all active:scale-[0.98]"
+              className="flex items-center justify-center gap-sm px-xl py-md bg-primary-container text-white font-label-md text-label-md rounded-lg shadow-lg hover:bg-primary hover:shadow-xl transition-all active:scale-[0.98] cursor-pointer min-w-[180px] whitespace-nowrap flex-shrink-0"
             >
               <span className="material-symbols-outlined text-[20px]">event_available</span>
-              Book Appointment
+              {t('hero.bookBtn')}
             </button>
             <button 
               onClick={onFindDoctor}
-              className="flex items-center justify-center gap-sm px-xl py-md bg-white dark:bg-slate-800 text-primary dark:text-primary-fixed-dim border border-primary dark:border-slate-700 font-label-md text-label-md rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-[0.98]"
+              className="flex items-center justify-center gap-sm px-xl py-md bg-white dark:bg-slate-800 text-primary dark:text-primary-fixed-dim border border-primary dark:border-slate-700 font-label-md text-label-md rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-[0.98] cursor-pointer min-w-[180px] whitespace-nowrap flex-shrink-0"
             >
               <span className="material-symbols-outlined text-[20px]">search</span>
-              Find a Doctor
+              {t('hero.findBtn')}
             </button>
           </div>
         </div>

@@ -1,0 +1,319 @@
+{
+  "navbar": {
+    "home": "Home",
+    "services": "Services",
+    "doctors": "Doctors",
+    "insurance": "Insurance Partners",
+    "blogs": "Health Blogs",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "dashboard": "Dashboard",
+    "backToPatient": "Go to Patient Portal"
+  },
+  "hero": {
+    "title": "Excellence in Clinical Care & Patient Safety",
+    "subtitle": "Access world-class medical expertise with EMR integrated patient portal. Book appointments instantly and find specialists across 40+ departments.",
+    "bookBtn": "Book Appointment",
+    "findBtn": "Find a Doctor"
+  },
+  "stats": {
+    "patients": "Annual Patients",
+    "doctors": "Expert Doctors",
+    "beds": "Modern Beds",
+    "emergency": "Emergency Care"
+  },
+  "insurance": {
+    "title": "Insurance Partners"
+  },
+  "footer": {
+    "desc": "Providing world-class medical services since 1995. Committed to patient safety, ethical practice, and innovative healthcare.",
+    "quickLinks": "Quick Links",
+    "contact": "Contact Info",
+    "newsletter": "Newsletter",
+    "newsletterSub": "Stay updated with the latest health news.",
+    "subscribeBtn": "Subscribe",
+    "emailPlaceholder": "Enter your email...",
+    "copyright": "Copyright © MedEMR. All rights reserved.",
+    "address": "123 Healthcare Way, Medical District",
+    "phone": "+1 (555) 000-8888",
+    "email": "info@hms-admin.portal",
+    "emergency": "Emergency: 911 (24/7)",
+    "thankYou": "Thank you for subscribing!"
+  },
+  "services": {
+    "title": "Medical Services",
+    "subtitle": "Specialized healthcare solutions for every stage of life.",
+    "viewAll": "View All Departments",
+    "cardiology": {
+      "name": "Cardiology Department",
+      "desc": "Advanced heart care, diagnostics, and intervention with state-of-the-art labs."
+    },
+    "pediatrics": {
+      "name": "Pediatrics Department",
+      "desc": "Comprehensive and compassionate healthcare for kids from birth to adolescence."
+    },
+    "neurology": {
+      "name": "Neurology Department",
+      "desc": "Expert diagnostics and therapy for brain and nervous system disorders."
+    },
+    "orthopedics": {
+      "name": "Orthopedics & Spine",
+      "desc": "Bone, joint, and muscle health care delivered by top bone specialists."
+    },
+    "oncology": {
+      "name": "Oncology Department",
+      "desc": "Comprehensive multi-disciplinary cancer treatment plans."
+    },
+    "diagnostics": {
+      "name": "Diagnostics Center",
+      "desc": "Precise laboratory tests, screening packages, and diagnostic imaging."
+    },
+    "diagnosticsShort": {
+      "name": "Diagnostics Center",
+      "desc": "Precise lab and imaging tests."
+    },
+    "pageTitle": "Specialized Medical Services",
+    "pageDesc": "We commit to delivering complete healthcare solutions using the latest tech and expert clinical teams.",
+    "learnMore": "Learn more",
+    "details": "Details",
+    "bookConsultation": "Book Consultation",
+    "bookDiagnostic": "Book Lab Test",
+    "bookBtn": "Book Appointment",
+    "faqTitle": "Frequently Asked Questions",
+    "faqDesc": "Find quick answers to common questions about hospital outpatient procedures.",
+    "faq": {
+      "q1": "How do I book a specialist appointment?",
+      "a1": "You can book appointments via the Patient Portal, by calling our hotline, or by clicking the 'Book Appointment' button. We encourage booking at least 24 hours in advance.",
+      "q2": "Do you accept international insurance plans?",
+      "a2": "ClinicalPrecision HMS partners with over 50 domestic and global insurers. Please bring your insurance card and official ID when checking in.",
+      "q3": "How long do laboratory test results take?",
+      "a3": "Basic diagnostics results are available within 1-2 hours. More specialized tests or microbiology cultures may require 1-3 business days.",
+      "q4": "Does the hospital operate a 24/7 emergency service?",
+      "a4": "Yes, our Emergency Center operates 24 hours a day, 7 days a week, with standby critical care doctors and ambulance fleets."
+    }
+  },
+  "doctors": {
+    "title": "Meet Our Specialists",
+    "subtitle": "Our multi-disciplinary team is recognized globally for clinical excellence and groundbreaking research.",
+    "pageTitle": "Specialists Directory",
+    "pageDesc": "At ClinicalPrecision HMS, we assemble top medical experts committed to providing warm and highly effective care. All treatments base on evidence-based medicine and top technologies.",
+    "searchPlaceholder": "Search doctor's name or specialty...",
+    "searchLabel": "Search by name",
+    "deptLabel": "Department",
+    "locLabel": "Clinic Site",
+    "allDepts": "All Departments",
+    "allLocs": "All Locations",
+    "filterBtn": "Apply Filters",
+    "noResults": "No specialists matched the selected filters.",
+    "bookBtn": "Book Appointment",
+    "specialty": {
+      "Chief Cardiologist": "Chief Cardiologist",
+      "Senior Pediatrician": "Senior Pediatrician",
+      "Neurology Specialist": "Neurology Specialist",
+      "Orthopedic Surgeon": "Orthopedic Surgeon",
+      "Chuyên gia Tim mạch học": "Chief Cardiologist",
+      "Chuyên khoa Nội tiết": "Endocrinologist",
+      "Nhi Khoa Tổng quát": "General Pediatrician",
+      "Phẫu thuật Ngoại thần kinh": "Neurosurgeon",
+      "Chuyên khoa Ung bướu": "Oncologist",
+      "Da liễu & Thẩm mỹ": "Dermatologist & Cosmetologist"
+    },
+    "department": {
+      "Cardiology": "Cardiology",
+      "Pediatrics": "Pediatrics",
+      "Neurology": "Neurology",
+      "Orthopedics": "Orthopedics",
+      "Oncology": "Oncology",
+      "Diagnostics": "Diagnostics",
+      "Tim mạch": "Cardiology",
+      "Nội endocrine": "Endocrinology",
+      "Nhi khoa": "Pediatrics",
+      "Thần kinh": "Neurology",
+      "Ung bướu": "Oncology",
+      "Da liễu": "Dermatology"
+    },
+    "location": {
+      "Cơ sở Quận 1": "District 1 Clinic",
+      "Cơ sở Quận 7": "District 7 Clinic",
+      "Trung tâm Kỹ thuật cao": "High-Tech Center"
+    },
+    "experience": {
+      "22 năm kinh nghiệm": "22 Years Experience",
+      "15 năm kinh nghiệm": "15 Years Experience",
+      "10 năm kinh nghiệm": "10 Years Experience",
+      "18 năm kinh nghiệm": "18 Years Experience",
+      "25 năm kinh nghiệm": "25 Years Experience",
+      "8 năm kinh nghiệm": "8 Years Experience",
+      "20+ Years Experience": "20+ Years Experience",
+      "15+ Years Experience": "15+ Years Experience",
+      "12+ Years Experience": "12+ Years Experience",
+      "18+ Years Experience": "18+ Years Experience"
+    },
+    "titleLabel": {
+      "Trưởng khoa": "Head of Department",
+      "Chief Cardiologist": "Head of Cardiology"
+    },
+    "certBadge": "100% International Board Certified",
+    "deptBadge": "40+ Medical Specialties"
+  },
+  "blogs": {
+    "title": "Health Resource Center",
+    "readMore": "Read Article",
+    "wellness": "Wellness",
+    "nutrition": "Nutrition",
+    "innovation": "Innovation",
+    "alert": "Alert",
+    "pageTitle": "Health Resource Center",
+    "featured": {
+      "title": "Modern Approaches to Mental Health and Mindfulness",
+      "desc": "Discover how clinical mindfulness programs are revolutionizing outpatient therapy for chronic stress and anxiety management."
+    },
+    "articles": {
+      "dietary": {
+        "title": "Dietary Habits for a Healthy Heart",
+        "desc": "Simple swaps that can significantly lower your risk of cardiovascular events."
+      },
+      "genetic": {
+        "title": "The Future of Genetic Mapping",
+        "desc": "How personalized medicine is changing the way we treat rare diseases."
+      },
+      "flu": {
+        "title": "Flu Season Survival Guide 2024",
+        "desc": "Everything you need to know about this year's strains and vaccinations."
+      }
+    }
+  },
+  "login": {
+    "title": "Sign In to EMR Portal",
+    "identityLabel": "Email or Username",
+    "identityPlaceholder": "Enter email or username...",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter password...",
+    "rememberMe": "Keep me logged in",
+    "forgotPassword": "Forgot Password?",
+    "submitBtn": "Sign In",
+    "loggingIn": "Signing in...",
+    "registerPrompt": "Patient seeking medical history?",
+    "registerBtn": "Register for a Patient Account",
+    "validation": {
+      "identityRequired": "Username or Email is required.",
+      "passwordRequired": "Password is required.",
+      "passwordLength": "Password must be at least 6 characters."
+    },
+    "successRedirect": "Login successful! Redirecting...",
+    "invalidCredentials": "Invalid username or password."
+  },
+  "register": {
+    "title": "Register Patient Account",
+    "fullNameLabel": "Full Name",
+    "fullNamePlaceholder": "Enter full name...",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "Enter email...",
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "Enter username...",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter password (min 6 characters)...",
+    "phoneLabel": "Phone Number",
+    "phonePlaceholder": "Enter phone number...",
+    "submitBtn": "Register",
+    "registering": "Registering...",
+    "loginPrompt": "Already have an account?",
+    "loginLink": "Login here",
+    "backHome": "Back to Home",
+    "validation": {
+      "fullNameRequired": "Full name is required.",
+      "emailRequired": "Email is required.",
+      "emailInvalid": "Invalid email address format.",
+      "usernameRequired": "Username is required.",
+      "usernameLength": "Username must be at least 4 characters.",
+      "passwordRequired": "Password is required.",
+      "passwordLength": "Password must be at least 6 characters.",
+      "phoneRequired": "Phone number is required.",
+      "phoneInvalid": "Phone number must be 10-11 digits."
+    },
+    "successMsg": "Registration successful! Redirecting to login...",
+    "sidebarTitle": "Patient Registration",
+    "sidebarDesc": "Please complete the following steps to establish your electronic medical record.",
+    "stepLabel": "Step",
+    "step1Title": "Personal Information",
+    "step2Title": "Contact Details",
+    "step3Title": "Account Security",
+    "hipaaLabel": "HIPAA Compliant Data Encryption",
+    "personalInfo": "Personal Information",
+    "dobLabel": "Date of Birth",
+    "genderLabel": "Gender",
+    "selectGender": "Select Gender",
+    "male": "Male",
+    "female": "Female",
+    "nonBinary": "Non-binary",
+    "preferNotToSay": "Prefer not to say",
+    "idNumberLabel": "ID / Passport Number",
+    "contactDetails": "Contact Details",
+    "basicContact": "Basic Contacts",
+    "phoneLabel": "Mobile Phone Number *",
+    "emailLabel": "Email Address *",
+    "permanentAddress": "Permanent Address",
+    "provinceLabel": "Province/City *",
+    "selectProvince": "Select Province/City",
+    "districtLabel": "District *",
+    "selectDistrict": "Select District",
+    "wardLabel": "Ward *",
+    "selectWard": "Select Ward",
+    "streetLabel": "Street Address *",
+    "streetPlaceholder": "e.g. 123 Healthcare Way",
+    "emergencyContact": "Emergency Contact",
+    "emergencyNameLabel": "Emergency Contact Full Name *",
+    "emergencyNamePlaceholder": "Enter full name",
+    "emergencyRelationshipLabel": "Relationship *",
+    "selectRelationship": "Select relationship",
+    "relParent": "Parent",
+    "relSpouse": "Spouse",
+    "relChild": "Child",
+    "relSibling": "Sibling",
+    "relOther": "Other",
+    "emergencyPhoneLabel": "Emergency Contact Phone *",
+    "accountSecurity": "Account Security",
+    "dataSafeBadge": "Data Secure",
+    "usernameLabel": "Username (Default is Phone Number)",
+    "newPasswordLabel": "New Password",
+    "passwordPlaceholder": "Enter password",
+    "confirmPasswordLabel": "Confirm Password *",
+    "confirmPasswordPlaceholder": "Confirm password",
+    "securityQuestionLabel": "Security Question",
+    "selectQuestion": "Select a question",
+    "qPet": "What was the name of your first pet?",
+    "qCity": "What city were you born in?",
+    "qMother": "What is your mother's maiden name?",
+    "qFood": "What was your favorite childhood food?",
+    "securityAnswerLabel": "Security Answer",
+    "securityAnswerPlaceholder": "Your Answer",
+    "termsLabel": "I agree to the ",
+    "termsLink": "Terms of Service",
+    "andLabel": " and ",
+    "privacyLink": "HIPAA Privacy Policy",
+    "termsNote": ". I understand that my information will be stored securely.",
+    "prevBtn": "Previous",
+    "nextBtn": "Next Step",
+    "processing": "Processing...",
+    "completeBtn": "Complete Registration",
+    "footerCopyright": "© 2026 MedCore Systems. HIPAA Compliant Interface.",
+    "privacyPolicy": "Privacy Policy",
+    "securityStandards": "Security Standards",
+    "support": "Support"
+  },
+  "forgot": {
+    "title": "Recover EMR Password",
+    "desc": "Enter your registered email address. We will send an OTP verification link.",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "Enter your email...",
+    "submitBtn": "Send OTP",
+    "sending": "Sending...",
+    "backLogin": "Back to Login",
+    "validation": {
+      "emailRequired": "Email address is required.",
+      "emailInvalid": "Invalid email address format."
+    },
+    "successMsg": "OTP sent successfully! Please check your email."
+  }
+}

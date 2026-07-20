@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { LanguageContext } from '../../../../shared/context/LanguageContext';
 
 const doctorsData = [
   {
@@ -64,6 +65,7 @@ const doctorsData = [
 ];
 
 export default function DoctorsPage({ onNavigate, onBookConsultation }) {
+  const { t, lang } = useContext(LanguageContext);
   const [searchName, setSearchName] = useState('');
   const [selectedDept, setSelectedDept] = useState('');
   const [selectedLoc, setSelectedLoc] = useState('');
@@ -85,8 +87,13 @@ export default function DoctorsPage({ onNavigate, onBookConsultation }) {
 
   const handleApplyFilter = () => {
     const filtered = doctorsData.filter((doc) => {
-      const matchesName = doc.name.toLowerCase().includes(searchName.toLowerCase()) ||
-                          doc.specialty.toLowerCase().includes(searchName.toLowerCase());
+      const translatedName = doc.name.toLowerCase();
+      const translatedSpecialty = t(`doctors.specialty.${doc.specialty}`).toLowerCase();
+      const query = searchName.toLowerCase();
+
+      const matchesName = translatedName.includes(query) ||
+                          translatedSpecialty.includes(query) ||
+                          doc.specialty.toLowerCase().includes(query);
       const matchesDept = !selectedDept || doc.department === selectedDept;
       const matchesLoc = !selectedLoc || doc.location === selectedLoc;
       return matchesName && matchesDept && matchesLoc;
@@ -94,36 +101,36 @@ export default function DoctorsPage({ onNavigate, onBookConsultation }) {
     setFilteredDoctors(filtered);
   };
 
-  // Run initial filter on criteria changes
+  // Run filter on criteria changes
   useEffect(() => {
     handleApplyFilter();
-  }, [searchName, selectedDept, selectedLoc]);
+  }, [searchName, selectedDept, selectedLoc, lang]);
 
   return (
-    <main className="pt-24 pb-xl px-lg max-w-7xl mx-auto">
+    <main className="pt-24 pb-xl px-lg max-w-7xl mx-auto min-h-screen">
         
         {/* Hero & Commitment Section */}
         <section className="grid grid-cols-1 md:grid-cols-12 gap-xl mb-xl items-center">
           <div className="md:col-span-7">
-            <h1 className="font-headline-xl text-headline-xl text-on-background dark:text-white mb-md">
-              Đội Ngũ Bác Sĩ Chuyên Khoa
+            <h1 className="font-headline-xl text-headline-xl text-on-background dark:text-white mb-md leading-tight">
+              {t('doctors.pageTitle')}
             </h1>
-            <p className="font-body-lg text-body-lg text-on-surface-variant dark:text-slate-300 mb-xl max-w-2xl">
-              Tại ClinicalPrecision HMS, chúng tôi quy tụ những chuyên gia y tế hàng đầu với cam kết mang lại sự chăm sóc tận tâm và hiệu quả nhất. Mọi quyết định điều trị đều dựa trên nền tảng y học thực chứng và công nghệ tiên tiến nhất.
+            <p className="font-body-lg text-body-lg text-on-surface-variant dark:text-slate-300 mb-xl max-w-2xl min-h-[84px]">
+              {t('doctors.pageDesc')}
             </p>
             <div className="flex flex-wrap gap-md">
-              <div className="flex items-center gap-sm bg-surface-container-low dark:bg-slate-800 px-md py-sm rounded-lg border border-outline-variant dark:border-slate-700">
-                <span className="material-symbols-outlined text-primary dark:text-primary-fixed-dim">verified</span>
-                <span className="font-label-md">100% Chứng Chỉ Quốc Tế</span>
+              <div className="flex items-center gap-sm bg-surface-container-low dark:bg-slate-800 px-md py-sm rounded-lg border border-outline-variant dark:border-slate-700 select-none">
+                <span className="material-symbols-outlined text-primary dark:text-sky-400 shrink-0">verified</span>
+                <span className="font-label-md whitespace-nowrap">{t('doctors.certBadge')}</span>
               </div>
-              <div className="flex items-center gap-sm bg-surface-container-low dark:bg-slate-800 px-md py-sm rounded-lg border border-outline-variant dark:border-slate-700">
-                <span className="material-symbols-outlined text-primary dark:text-primary-fixed-dim">clinical_notes</span>
-                <span className="font-label-md">Hơn 50 Chuyên Khoa</span>
+              <div className="flex items-center gap-sm bg-surface-container-low dark:bg-slate-800 px-md py-sm rounded-lg border border-outline-variant dark:border-slate-700 select-none">
+                <span className="material-symbols-outlined text-primary dark:text-sky-400 shrink-0">clinical_notes</span>
+                <span className="font-label-md whitespace-nowrap">{t('doctors.deptBadge')}</span>
               </div>
             </div>
           </div>
           
-          <div className="md:col-span-5 relative h-64 md:h-80 rounded-xl overflow-hidden border border-outline-variant dark:border-slate-800 group">
+          <div className="md:col-span-5 relative h-64 md:h-80 rounded-xl overflow-hidden border border-outline-variant dark:border-slate-800 group shrink-0 shadow-sm">
             <img 
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
               alt="Clinical corridor" 
@@ -139,52 +146,51 @@ export default function DoctorsPage({ onNavigate, onBookConsultation }) {
             
             {/* Search Name Input */}
             <div className="space-y-xs">
-              <label className="font-label-md text-on-surface-variant dark:text-slate-300 ml-xs">Tìm theo tên</label>
+              <label className="font-label-md text-on-surface-variant dark:text-slate-300 ml-xs select-none">{t('doctors.searchLabel')}</label>
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline dark:text-slate-400">
                   search
                 </span>
                 <input 
                   type="text"
-                  placeholder="Tên bác sĩ..."
+                  placeholder={t('doctors.searchPlaceholder')}
                   value={searchName}
                   onChange={(e) => setSearchName(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-outline-variant dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background dark:bg-slate-900 text-body-md text-on-surface dark:text-white outline-none"
+                  className="w-full pl-10 pr-4 py-2 border border-outline-variant dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background dark:bg-slate-900 text-body-md text-on-surface dark:text-white outline-none placeholder-slate-400 dark:placeholder-slate-500"
                 />
               </div>
             </div>
 
             {/* Department Dropdown */}
             <div className="space-y-xs">
-              <label className="font-label-md text-on-surface-variant dark:text-slate-300 ml-xs">Chuyên khoa</label>
+              <label className="font-label-md text-on-surface-variant dark:text-slate-300 ml-xs select-none">{t('doctors.deptLabel')}</label>
               <select 
                 value={selectedDept}
                 onChange={(e) => setSelectedDept(e.target.value)}
                 className="w-full px-4 py-2 border border-outline-variant dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background dark:bg-slate-900 text-body-md text-on-surface dark:text-white outline-none appearance-none"
               >
-                <option value="">Tất cả chuyên khoa</option>
-                <option value="Tim mạch">Tim mạch</option>
-                <option value="Nhi khoa">Nhi khoa</option>
-                <option value="Thần kinh">Thần kinh</option>
-                <option value="Chỉnh hình">Chỉnh hình</option>
-                <option value="Nội endocrine">Nội tiết</option>
-                <option value="Da liễu">Da liễu</option>
-                <option value="Ung bướu">Ung bướu</option>
+                <option value="">{t('doctors.allDepts')}</option>
+                <option value="Tim mạch">{t('doctors.department.Tim mạch')}</option>
+                <option value="Nhi khoa">{t('doctors.department.Nhi khoa')}</option>
+                <option value="Thần kinh">{t('doctors.department.Thần kinh')}</option>
+                <option value="Nội endocrine">{t('doctors.department.Nội endocrine')}</option>
+                <option value="Da liễu">{t('doctors.department.Da liễu')}</option>
+                <option value="Ung bướu">{t('doctors.department.Ung bướu')}</option>
               </select>
             </div>
 
             {/* Location Dropdown */}
             <div className="space-y-xs">
-              <label className="font-label-md text-on-surface-variant dark:text-slate-300 ml-xs">Địa điểm</label>
+              <label className="font-label-md text-on-surface-variant dark:text-slate-300 ml-xs select-none">{t('doctors.locLabel')}</label>
               <select 
                 value={selectedLoc}
                 onChange={(e) => setSelectedLoc(e.target.value)}
                 className="w-full px-4 py-2 border border-outline-variant dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary bg-background dark:bg-slate-900 text-body-md text-on-surface dark:text-white outline-none appearance-none"
               >
-                <option value="">Tất cả cơ sở</option>
-                <option value="Cơ sở Quận 1">Cơ sở Quận 1</option>
-                <option value="Cơ sở Quận 7">Cơ sở Quận 7</option>
-                <option value="Trung tâm Kỹ thuật cao">Trung tâm Kỹ thuật cao</option>
+                <option value="">{t('doctors.allLocs')}</option>
+                <option value="Cơ sở Quận 1">{t('doctors.location.Cơ sở Quận 1')}</option>
+                <option value="Cơ sở Quận 7">{t('doctors.location.Cơ sở Quận 7')}</option>
+                <option value="Trung tâm Kỹ thuật cao">{t('doctors.location.Trung tâm Kỹ thuật cao')}</option>
               </select>
             </div>
 
@@ -192,10 +198,10 @@ export default function DoctorsPage({ onNavigate, onBookConsultation }) {
             <div>
               <button 
                 onClick={handleApplyFilter}
-                className="w-full bg-primary hover:bg-primary-container text-white font-label-md py-2.5 rounded-lg transition-all flex items-center justify-center gap-sm active:scale-[0.98]"
+                className="w-full bg-primary hover:bg-primary-container text-white font-label-md py-2.5 rounded-lg transition-all flex items-center justify-center gap-sm active:scale-[0.98] cursor-pointer whitespace-nowrap shrink-0"
               >
                 <span className="material-symbols-outlined text-[18px]">filter_list</span>
-                Áp dụng bộ lọc
+                {t('doctors.filterBtn')}
               </button>
             </div>
           </div>
@@ -209,116 +215,58 @@ export default function DoctorsPage({ onNavigate, onBookConsultation }) {
                 key={doc.id} 
                 className="doctor-card bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 rounded-xl overflow-hidden transition-all duration-300 hover:border-primary dark:hover:border-primary-fixed-dim clinical-shadow flex flex-col justify-between"
               >
-                <div className="h-64 overflow-hidden relative">
+                <div className="h-64 overflow-hidden relative select-none">
                   <img 
                     className="doctor-image w-full h-full object-cover transition-transform duration-500" 
                     alt={doc.name} 
                     src={doc.image}
                   />
                   {doc.title && (
-                    <div className="absolute top-md right-md bg-secondary-container text-on-secondary-container dark:text-teal-900 px-sm py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                      {doc.title}
+                    <div className="absolute top-md right-md bg-secondary-container text-on-secondary-container dark:text-teal-900 px-sm py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm">
+                      {t(`doctors.titleLabel.${doc.title}`)}
                     </div>
                   )}
                 </div>
-                <div className="p-md flex-grow space-y-sm">
+                <div className="p-md flex-grow space-y-sm flex flex-col justify-between min-h-[140px]">
                   <div>
-                    <h3 className="font-headline-md text-headline-md text-on-surface dark:text-white">
+                    <h3 className="font-headline-md text-headline-md text-on-surface dark:text-white truncate" title={doc.name}>
                       {doc.name}
                     </h3>
-                    <p className="font-body-sm text-body-sm text-primary dark:text-primary-fixed-dim font-semibold">
-                      {doc.specialty}
+                    <p className="font-body-sm text-body-sm text-primary dark:text-sky-400 font-semibold truncate" title={t(`doctors.specialty.${doc.specialty}`)}>
+                      {t(`doctors.specialty.${doc.specialty}`)}
                     </p>
                   </div>
-                  <div className="flex items-center gap-sm text-on-surface-variant dark:text-slate-400">
-                    <span className="material-symbols-outlined text-[18px]">work_history</span>
-                    <span className="font-body-sm">{doc.experience}</span>
-                  </div>
-                  <div className="flex items-center gap-sm text-on-surface-variant dark:text-slate-400">
-                    <span className="material-symbols-outlined text-[18px]">location_on</span>
-                    <span className="font-body-sm">{doc.location}</span>
+                  <div className="space-y-xs shrink-0">
+                    <div className="flex items-center gap-sm text-on-surface-variant dark:text-slate-400">
+                      <span className="material-symbols-outlined text-[18px] shrink-0">work_history</span>
+                      <span className="font-body-sm truncate">{t(`doctors.experience.${doc.experience}`)}</span>
+                    </div>
+                    <div className="flex items-center gap-sm text-on-surface-variant dark:text-slate-400">
+                      <span className="material-symbols-outlined text-[18px] shrink-0">location_on</span>
+                      <span className="font-body-sm truncate">{t(`doctors.location.${doc.location}`)}</span>
+                    </div>
                   </div>
                 </div>
-                <div className="p-md pt-0">
+                <div className="p-md pt-0 shrink-0">
                   <button 
                     onClick={() => onBookConsultation(doc.name, doc.department)}
-                    className="w-full py-sm border-2 border-primary dark:border-primary-fixed-dim text-primary dark:text-primary-fixed-dim font-label-md rounded-lg hover:bg-primary dark:hover:bg-slate-700 hover:text-white transition-colors active:scale-[0.98]"
+                    className="w-full py-sm border-2 border-primary dark:border-sky-400/50 text-primary dark:text-sky-400 font-label-md rounded-lg hover:bg-primary dark:hover:bg-slate-700 hover:text-white transition-colors active:scale-[0.98] cursor-pointer whitespace-nowrap"
                   >
-                    Đặt Lịch Hẹn
+                    {t('doctors.bookBtn')}
                   </button>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-xl bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 max-w-xl mx-auto rounded-xl">
-            <span className="material-symbols-outlined text-[48px] text-slate-300 dark:text-slate-600 mb-md">
-              person_search
-            </span>
-            <h4 className="font-headline-md text-headline-md text-on-surface dark:text-white">Không tìm thấy bác sĩ</h4>
-            <p className="font-body-sm text-body-sm text-on-surface-variant dark:text-slate-400 mt-sm">
-              Không có bác sĩ nào khớp với từ khóa của bạn. Vui lòng đặt lại bộ lọc.
+          <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-xl border border-outline-variant dark:border-slate-700 p-xl">
+            <span className="material-symbols-outlined text-[48px] text-slate-300 dark:text-slate-600 mb-md block">search_off</span>
+            <p className="font-body-lg text-body-lg text-on-surface-variant dark:text-slate-400">
+              {t('doctors.noResults')}
             </p>
-            <button 
-              onClick={() => { setSearchName(''); setSelectedDept(''); setSelectedLoc(''); }}
-              className="mt-md text-primary dark:text-primary-fixed-dim font-label-md text-label-md hover:underline"
-            >
-              Đặt lại bộ lọc
-            </button>
           </div>
         )}
 
-        {/* Excellence Bento Grid Section */}
-        <section className="mt-xl">
-          <h2 className="font-headline-lg text-headline-lg text-center text-on-surface dark:text-white mb-xl">
-            Cam Kết Về Sự Hoàn Hảo Y Khoa
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-gutter h-auto md:h-[400px]">
-            
-            {/* JCI Standard Card */}
-            <div className="md:col-span-2 bg-primary text-on-primary p-xl rounded-xl flex flex-col justify-end relative overflow-hidden">
-              <div className="z-10">
-                <span className="material-symbols-outlined text-[48px] mb-md" style={{ fontVariationSettings: "'FILL' 1" }}>
-                  workspace_premium
-                </span>
-                <h3 className="font-headline-md text-headline-md mb-sm">Tiêu chuẩn JCI Quốc tế</h3>
-                <p className="font-body-md text-body-md opacity-90">
-                  Chúng tôi tự hào đạt được chứng nhận chất lượng vàng từ Joint Commission International cho các quy trình an toàn người bệnh.
-                </p>
-              </div>
-              <div className="absolute top-0 right-0 p-lg opacity-10">
-                <span className="material-symbols-outlined text-[120px]">health_and_safety</span>
-              </div>
-            </div>
-
-            {/* Surgery Stats Card */}
-            <div className="md:col-span-1 bg-surface-container-high dark:bg-slate-800 border border-outline-variant dark:border-slate-700 p-lg rounded-xl flex flex-col items-center justify-center text-center">
-              <div className="text-primary dark:text-primary-fixed-dim font-headline-xl text-headline-xl mb-xs">500+</div>
-              <p className="font-label-md text-on-surface-variant dark:text-slate-300 uppercase tracking-widest">Ca phẫu thuật/tháng</p>
-            </div>
-
-            {/* Satisfaction Card */}
-            <div className="md:col-span-1 bg-surface-container-high dark:bg-slate-800 border border-outline-variant dark:border-slate-700 p-lg rounded-xl flex flex-col items-center justify-center text-center">
-              <div className="text-primary dark:text-primary-fixed-dim font-headline-xl text-headline-xl mb-xs">98%</div>
-              <p className="font-label-md text-on-surface-variant dark:text-slate-300 uppercase tracking-widest">Hài lòng bệnh nhân</p>
-            </div>
-
-            {/* Modern Lab Card */}
-            <div className="md:col-span-2 bg-secondary-container dark:bg-slate-800 text-on-secondary-container dark:text-slate-100 p-xl rounded-xl flex items-center gap-xl border border-transparent dark:border-slate-700">
-              <div className="hidden sm:block shrink-0">
-                <span className="material-symbols-outlined text-[64px] text-primary dark:text-primary-fixed-dim">biotech</span>
-              </div>
-              <div>
-                <h3 className="font-headline-md text-headline-md mb-sm text-on-surface dark:text-white">Phòng Lab Hiện Đại</h3>
-                <p className="font-body-md text-body-md text-on-surface-variant dark:text-slate-300">
-                  Hệ thống xét nghiệm tự động hóa hoàn toàn giúp rút ngắn thời gian chờ đợi và tăng độ chính xác lên 99.9%.
-                </p>
-              </div>
-            </div>
-
-          </div>
-        </section>
-
-      </main>
+    </main>
   );
 }

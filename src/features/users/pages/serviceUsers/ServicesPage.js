@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+import { LanguageContext } from '../../../../shared/context/LanguageContext';
 
 export default function ServicesPage({ onNavigate, onBookConsultation }) {
+  const { t } = useContext(LanguageContext);
   const [activeFaq, setActiveFaq] = useState(null);
 
   const toggleFaq = (index) => {
@@ -13,20 +15,20 @@ export default function ServicesPage({ onNavigate, onBookConsultation }) {
 
   const faqs = [
     {
-      question: 'Làm thế nào để đặt lịch khám chuyên khoa?',
-      answer: 'Quý khách có thể đặt lịch qua ứng dụng Patient Portal, gọi đến hotline hoặc nhấn vào nút "Đặt Lịch Hẹn" trên trang web. Chúng tôi khuyến khích đặt trước ít nhất 24 giờ.'
+      question: t('services.faq.q1'),
+      answer: t('services.faq.a1')
     },
     {
-      question: 'Bệnh viện có chấp nhận bảo hiểm quốc tế không?',
-      answer: 'ClinicalPrecision HMS liên kết với hơn 50 đơn vị bảo hiểm trong và ngoài nước. Vui lòng mang theo thẻ bảo hiểm và giấy tờ tùy thân khi đến khám.'
+      question: t('services.faq.q2'),
+      answer: t('services.faq.a2')
     },
     {
-      question: 'Quy trình xét nghiệm tại bệnh viện mất bao lâu?',
-      answer: 'Đối với các xét nghiệm cơ bản, kết quả sẽ có sau 1-2 giờ. Các xét nghiệm chuyên sâu hoặc nuôi cấy vi sinh có thể mất từ 1-3 ngày làm việc.'
+      question: t('services.faq.q3'),
+      answer: t('services.faq.a3')
     },
     {
-      question: 'Bệnh viện có dịch vụ cấp cứu 24/7 không?',
-      answer: 'Có, trung tâm cấp cứu của chúng tôi hoạt động 24/7 với đội ngũ bác sĩ trực chiến và xe cứu thương trang bị đầy đủ thiết bị hồi sức cấp cứu.'
+      question: t('services.faq.q4'),
+      answer: t('services.faq.a4')
     }
   ];
 
@@ -45,17 +47,17 @@ export default function ServicesPage({ onNavigate, onBookConsultation }) {
           </div>
           <div className="relative z-10 px-xl max-w-2xl">
             <h1 className="font-headline-xl text-headline-xl text-primary dark:text-primary-fixed-dim mb-md">
-              Dịch Vụ Y Tế Chuyên Sâu
+              {t('services.pageTitle')}
             </h1>
-            <p className="font-body-lg text-body-lg text-on-surface-variant dark:text-slate-300 mb-xl">
-              Chúng tôi cam kết cung cấp các giải pháp chăm sóc sức khỏe toàn diện với công nghệ tiên tiến nhất và đội ngũ chuyên gia đầu ngành.
+            <p className="font-body-lg text-body-lg text-on-surface-variant dark:text-slate-300 mb-xl min-h-[56px]">
+              {t('services.pageDesc')}
             </p>
             <div className="flex gap-md">
               <button 
                 onClick={() => onBookConsultation('', '')}
-                className="bg-primary hover:bg-primary-container text-white px-lg py-md rounded-lg font-label-md text-label-md flex items-center gap-sm transition-all active:scale-[0.98] shadow-sm"
+                className="bg-primary hover:bg-primary-container text-white px-lg py-md rounded-lg font-label-md text-label-md flex items-center gap-sm transition-all active:scale-[0.98] shadow-sm cursor-pointer whitespace-nowrap shrink-0"
               >
-                Đặt Lịch Hẹn
+                {t('services.bookBtn')}
                 <span className="material-symbols-outlined text-[18px]">calendar_today</span>
               </button>
             </div>
@@ -68,25 +70,25 @@ export default function ServicesPage({ onNavigate, onBookConsultation }) {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-gutter">
           
           {/* Cardiology */}
-          <div className="md:col-span-8 bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 p-xl rounded-xl hover:shadow-md transition-all group flex flex-col justify-between">
+          <div className="md:col-span-8 bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 p-xl rounded-xl hover:shadow-md transition-all group flex flex-col justify-between min-h-[280px]">
             <div className="flex flex-col md:flex-row gap-xl h-full">
               <div className="flex-1 flex flex-col justify-between">
                 <div>
-                  <span className="material-symbols-outlined text-primary dark:text-primary-fixed-dim text-[48px] mb-md" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  <span className="material-symbols-outlined text-primary dark:text-primary-fixed-dim text-[48px] mb-md block w-fit shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>
                     cardiology
                   </span>
                   <h3 className="font-headline-lg text-headline-lg text-on-surface dark:text-white mb-sm">
-                    Khoa Tim Mạch
+                    {t('services.cardiology.name')}
                   </h3>
                   <p className="font-body-md text-body-md text-on-surface-variant dark:text-slate-300 mb-xl">
-                    Chẩn đoán và điều trị chuyên sâu các bệnh lý về tim mạch và hệ tuần hoàn với hệ thống can thiệp hiện đại.
+                    {t('services.cardiology.desc')}
                   </p>
                 </div>
                 <button 
                   onClick={() => onBookConsultation('', 'Cardiology')}
-                  className="text-primary dark:text-primary-fixed-dim font-label-md text-label-md flex items-center gap-xs group-hover:gap-sm transition-all text-left hover:underline"
+                  className="text-primary dark:text-primary-fixed-dim font-label-md text-label-md flex items-center gap-xs group-hover:gap-sm transition-all text-left hover:underline cursor-pointer w-fit"
                 >
-                  Tìm hiểu thêm <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                  {t('services.learnMore')} <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
                 </button>
               </div>
               <div className="w-full md:w-64 h-48 md:h-full overflow-hidden rounded-lg shrink-0">
@@ -100,103 +102,103 @@ export default function ServicesPage({ onNavigate, onBookConsultation }) {
           </div>
 
           {/* Pediatrics */}
-          <div className="md:col-span-4 bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 p-xl rounded-xl hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="md:col-span-4 bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 p-xl rounded-xl hover:shadow-md transition-all flex flex-col justify-between min-h-[280px]">
             <div>
-              <span className="material-symbols-outlined text-tertiary dark:text-amber-500 text-[40px] mb-md">
+              <span className="material-symbols-outlined text-tertiary dark:text-amber-500 text-[40px] mb-md block w-fit shrink-0">
                 child_care
               </span>
               <h3 className="font-headline-md text-headline-md text-on-surface dark:text-white mb-sm">
-                Khoa Nhi
+                {t('services.pediatrics.name')}
               </h3>
-              <p className="font-body-md text-body-md text-on-surface-variant dark:text-slate-300 mb-md">
-                Chăm sóc sức khỏe toàn diện cho trẻ em từ sơ sinh đến vị thành niên trong môi trường thân thiện.
+              <p className="font-body-md text-body-md text-on-surface-variant dark:text-slate-300 mb-md min-h-[72px]">
+                {t('services.pediatrics.desc')}
               </p>
             </div>
             <button 
               onClick={() => onBookConsultation('', 'Pediatrics')}
-              className="text-primary dark:text-primary-fixed-dim font-label-md text-label-md flex items-center gap-xs hover:underline text-left"
+              className="text-primary dark:text-primary-fixed-dim font-label-md text-label-md flex items-center gap-xs hover:underline text-left cursor-pointer w-fit"
             >
-              Chi tiết <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+              {t('services.details')} <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
             </button>
           </div>
 
           {/* Neurology */}
-          <div className="md:col-span-4 bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 p-xl rounded-xl hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="md:col-span-4 bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 p-xl rounded-xl hover:shadow-md transition-all flex flex-col justify-between min-h-[280px]">
             <div>
-              <span className="material-symbols-outlined text-secondary dark:text-teal-400 text-[40px] mb-md">
+              <span className="material-symbols-outlined text-secondary dark:text-teal-400 text-[40px] mb-md block w-fit shrink-0">
                 neurology
               </span>
               <h3 className="font-headline-md text-headline-md text-on-surface dark:text-white mb-sm">
-                Khoa Thần Kinh
+                {t('services.neurology.name')}
               </h3>
-              <p className="font-body-md text-body-md text-on-surface-variant dark:text-slate-300 mb-md">
-                Nghiên cứu và điều trị các rối loạn hệ thần kinh với công nghệ chẩn đoán hình ảnh 3.0T MRI.
+              <p className="font-body-md text-body-md text-on-surface-variant dark:text-slate-300 mb-md min-h-[72px]">
+                {t('services.neurology.desc')}
               </p>
             </div>
             <button 
               onClick={() => onBookConsultation('', 'Neurology')}
-              className="text-primary dark:text-primary-fixed-dim font-label-md text-label-md flex items-center gap-xs hover:underline text-left"
+              className="text-primary dark:text-primary-fixed-dim font-label-md text-label-md flex items-center gap-xs hover:underline text-left cursor-pointer w-fit"
             >
-              Đặt tư vấn <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+              {t('services.bookConsultation')} <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
             </button>
           </div>
 
           {/* Oncology */}
-          <div className="md:col-span-4 bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 p-xl rounded-xl hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="md:col-span-4 bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 p-xl rounded-xl hover:shadow-md transition-all flex flex-col justify-between min-h-[280px]">
             <div>
-              <span className="material-symbols-outlined text-error dark:text-red-400 text-[40px] mb-md">
+              <span className="material-symbols-outlined text-error dark:text-red-400 text-[40px] mb-md block w-fit shrink-0">
                 medical_services
               </span>
               <h3 className="font-headline-md text-headline-md text-on-surface dark:text-white mb-sm">
-                Khoa Ung Bướu
+                {t('services.oncology.name')}
               </h3>
-              <p className="font-body-md text-body-md text-on-surface-variant dark:text-slate-300 mb-md">
-                Cá nhân hóa phác đồ điều trị ung thư bằng phương pháp đa mô thức và liệu pháp miễn dịch.
+              <p className="font-body-md text-body-md text-on-surface-variant dark:text-slate-300 mb-md min-h-[72px]">
+                {t('services.oncology.desc')}
               </p>
             </div>
             <button 
-              onClick={() => onBookConsultation('', 'Ung bướu')}
-              className="text-primary dark:text-primary-fixed-dim font-label-md text-label-md flex items-center gap-xs hover:underline text-left"
+              onClick={() => onBookConsultation('', 'Oncology')}
+              className="text-primary dark:text-primary-fixed-dim font-label-md text-label-md flex items-center gap-xs hover:underline text-left cursor-pointer w-fit"
             >
-              Thông tin thêm <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+              {t('services.learnMore')} <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
             </button>
           </div>
 
           {/* Orthopedics */}
-          <div className="md:col-span-4 bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 p-xl rounded-xl hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="md:col-span-4 bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 p-xl rounded-xl hover:shadow-md transition-all flex flex-col justify-between min-h-[280px]">
             <div>
-              <span className="material-symbols-outlined text-primary dark:text-primary-fixed-dim text-[40px] mb-md">
+              <span className="material-symbols-outlined text-primary dark:text-primary-fixed-dim text-[40px] mb-md block w-fit shrink-0">
                 orthopedics
               </span>
               <h3 className="font-headline-md text-headline-md text-on-surface dark:text-white mb-sm">
-                Chấn Thương Chỉnh Hình
+                {t('services.orthopedics.name')}
               </h3>
-              <p className="font-body-md text-body-md text-on-surface-variant dark:text-slate-300 mb-md">
-                Điều trị các bệnh lý cơ xương khớp và phục hồi chức năng sau chấn thương thể thao.
+              <p className="font-body-md text-body-md text-on-surface-variant dark:text-slate-300 mb-md min-h-[72px]">
+                {t('services.orthopedics.desc')}
               </p>
             </div>
             <button 
               onClick={() => onBookConsultation('', 'Orthopedics')}
-              className="text-primary dark:text-primary-fixed-dim font-label-md text-label-md flex items-center gap-xs hover:underline text-left"
+              className="text-primary dark:text-primary-fixed-dim font-label-md text-label-md flex items-center gap-xs hover:underline text-left cursor-pointer w-fit"
             >
-              Tìm bác sĩ <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+              {t('services.findBtn')} <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
             </button>
           </div>
 
           {/* Diagnostics Center */}
-          <div className="md:col-span-12 bg-primary dark:bg-slate-800 text-on-primary dark:text-slate-100 p-xl rounded-xl flex flex-col md:flex-row items-center justify-between gap-xl border border-transparent dark:border-slate-700">
+          <div className="md:col-span-12 bg-primary dark:bg-slate-800 text-on-primary dark:text-slate-100 p-xl rounded-xl flex flex-col md:flex-row items-center justify-between gap-xl border border-transparent dark:border-slate-700 min-h-[140px]">
             <div className="max-w-2xl">
               <div className="flex items-center gap-sm mb-sm">
-                <span className="material-symbols-outlined text-[32px] text-white">biotech</span>
-                <h3 className="font-headline-lg text-headline-lg text-white">Trung Tâm Chẩn Đoán Hình Ảnh &amp; Xét Nghiệm</h3>
+                <span className="material-symbols-outlined text-[32px] text-white shrink-0">biotech</span>
+                <h3 className="font-headline-lg text-headline-lg text-white">{t('services.diagnostics.name')}</h3>
               </div>
-              <p className="font-body-lg text-body-lg opacity-90 text-white/90">Kết quả chính xác, nhanh chóng với hệ thống phòng Lab đạt tiêu chuẩn quốc tế ISO 15189.</p>
+              <p className="font-body-lg text-body-lg opacity-90 text-white/90">{t('services.diagnostics.desc')}</p>
             </div>
             <button 
-              onClick={() => onBookConsultation('', 'Xét nghiệm')}
-              className="bg-white dark:bg-slate-700 text-primary dark:text-white px-xl py-md rounded-lg font-label-md text-label-md hover:bg-slate-100 dark:hover:bg-slate-600 transition-all flex items-center gap-sm shrink-0"
+              onClick={() => onBookConsultation('', 'Diagnostics')}
+              className="bg-white dark:bg-slate-700 text-primary dark:text-white px-xl py-md rounded-lg font-label-md text-label-md hover:bg-slate-100 dark:hover:bg-slate-600 transition-all flex items-center gap-sm shrink-0 cursor-pointer"
             >
-              Đặt lịch xét nghiệm
+              {t('services.bookDiagnostic')}
               <span className="material-symbols-outlined text-[20px]">microwave</span>
             </button>
           </div>
@@ -207,7 +209,7 @@ export default function ServicesPage({ onNavigate, onBookConsultation }) {
       {/* FAQ Section */}
       <section className="max-w-4xl mx-auto px-lg py-xl">
         <h2 className="font-headline-xl text-headline-xl text-center text-primary dark:text-primary-fixed-dim mb-xl">
-          Câu Hỏi Thường Gặp
+          {t('services.faqTitle')}
         </h2>
         <div className="space-y-md">
           {faqs.map((faq, index) => {
@@ -218,9 +220,9 @@ export default function ServicesPage({ onNavigate, onBookConsultation }) {
                 className="bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 rounded-lg p-md cursor-pointer transition-all duration-200 shadow-sm"
                 onClick={() => toggleFaq(index)}
               >
-                <div className="flex justify-between items-center font-headline-md text-headline-md select-none text-on-surface dark:text-white">
+                <div className="flex justify-between items-center font-headline-md text-headline-md select-none text-on-surface dark:text-white gap-md">
                   <span>{faq.question}</span>
-                  <span className={`material-symbols-outlined transition-transform duration-200 ${isOpen ? 'rotate-180 text-primary dark:text-primary-fixed-dim' : 'text-on-surface-variant'}`}>
+                  <span className={`material-symbols-outlined transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-primary dark:text-primary-fixed-dim' : 'text-on-surface-variant'}`}>
                     expand_more
                   </span>
                 </div>

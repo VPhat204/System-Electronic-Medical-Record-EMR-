@@ -1,4 +1,5 @@
-import React, { useState, forwardRef, useImperativeHandle, useRef } from 'react';
+import React, { useState, forwardRef, useImperativeHandle, useRef, useContext } from 'react';
+import { LanguageContext } from '../../../../shared/context/LanguageContext';
 
 const doctorsData = [
   {
@@ -36,6 +37,7 @@ const doctorsData = [
 ];
 
 const Specialists = forwardRef(({ selectedDepartment, setSelectedDepartment, onBookConsultation }, ref) => {
+  const { t } = useContext(LanguageContext);
   const [searchQuery, setSearchQuery] = useState('');
   const searchInputRef = useRef(null);
 
@@ -48,12 +50,25 @@ const Specialists = forwardRef(({ selectedDepartment, setSelectedDepartment, onB
     }
   }));
 
-  const categories = ['All', 'Cardiology', 'Pediatrics', 'Neurology', 'Orthopedics'];
+  const categories = [
+    { id: 'All', label: t('doctors.allDepts') },
+    { id: 'Cardiology', label: t('doctors.department.Cardiology') },
+    { id: 'Pediatrics', label: t('doctors.department.Pediatrics') },
+    { id: 'Neurology', label: t('doctors.department.Neurology') },
+    { id: 'Orthopedics', label: t('doctors.department.Orthopedics') }
+  ];
 
   const filteredDoctors = doctorsData.filter((doc) => {
     const matchesDept = selectedDepartment === 'All' || doc.department === selectedDepartment;
-    const matchesSearch = doc.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          doc.specialty.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Multi-language safe search match
+    const translatedName = doc.name.toLowerCase();
+    const translatedSpecialty = t(`doctors.specialty.${doc.specialty}`).toLowerCase();
+    const query = searchQuery.toLowerCase();
+    
+    const matchesSearch = translatedName.includes(query) || 
+                          translatedSpecialty.includes(query) || 
+                          doc.specialty.toLowerCase().includes(query);
     return matchesDept && matchesSearch;
   });
 
@@ -62,9 +77,9 @@ const Specialists = forwardRef(({ selectedDepartment, setSelectedDepartment, onB
       <div className="container mx-auto px-lg">
         {/* Header Title */}
         <div className="text-center mb-xl">
-          <h3 className="font-headline-lg text-headline-lg text-on-surface dark:text-white">Meet Our Specialists</h3>
+          <h3 className="font-headline-lg text-headline-lg text-on-surface dark:text-white">{t('doctors.title')}</h3>
           <p className="font-body-md text-body-md text-on-surface-variant dark:text-slate-400 max-w-xl mx-auto mt-sm">
-            Our multi-disciplinary team is recognized globally for clinical excellence and groundbreaking research.
+            {t('doctors.subtitle')}
           </p>
         </div>
 
@@ -78,7 +93,7 @@ const Specialists = forwardRef(({ selectedDepartment, setSelectedDepartment, onB
             <input 
               ref={searchInputRef}
               type="text" 
-              placeholder="Search doctor's name or specialty..."
+              placeholder={t('doctors.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-12 pr-md py-sm bg-white dark:bg-slate-800 text-on-surface dark:text-white border border-outline-variant dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder-slate-400 dark:placeholder-slate-500"
@@ -86,7 +101,7 @@ const Specialists = forwardRef(({ selectedDepartment, setSelectedDepartment, onB
             {searchQuery && (
               <button 
                 onClick={() => setSearchQuery('')}
-                className="absolute right-md top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                className="absolute right-md top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[18px]">close</span>
               </button>
@@ -97,77 +112,62 @@ const Specialists = forwardRef(({ selectedDepartment, setSelectedDepartment, onB
           <div className="flex flex-wrap gap-xs justify-center">
             {categories.map((cat) => (
               <button
-                key={cat}
-                onClick={() => setSelectedDepartment(cat)}
-                className={`px-md py-[6px] font-label-md text-label-md rounded-full transition-all duration-150 ${
-                  selectedDepartment === cat
-                    ? 'bg-primary-container text-white'
-                    : 'bg-white dark:bg-slate-800 text-on-surface dark:text-slate-300 border border-outline-variant dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+                key={cat.id}
+                onClick={() => setSelectedDepartment(cat.id)}
+                className={`px-md py-xs font-label-md text-label-md rounded-full transition-all cursor-pointer whitespace-nowrap ${
+                  selectedDepartment === cat.id
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'bg-white dark:bg-slate-800 text-on-surface-variant dark:text-slate-300 border border-outline-variant dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
                 }`}
               >
-                {cat}
+                {cat.label}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Doctors Grid */}
-        {filteredDoctors.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
-            {filteredDoctors.map((doc) => (
-              <div 
-                key={doc.id} 
-                className="bg-white dark:bg-slate-800 rounded-xl border border-outline-variant dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow flex flex-col justify-between"
-              >
-                <div 
-                  className="h-64 bg-cover bg-top relative" 
-                  style={{ backgroundImage: `url('${doc.image}')` }}
-                  data-alt={`Portrait of ${doc.name}`}
-                >
-                  <div className="absolute top-sm right-sm bg-primary-fixed dark:bg-blue-950 text-primary dark:text-blue-300 px-sm py-[2px] rounded text-body-sm font-semibold">
-                    {doc.department}
-                  </div>
-                </div>
-                <div className="p-lg flex-1 flex flex-col justify-between">
-                  <div>
-                    <h4 className="font-headline-md text-headline-md text-on-surface dark:text-white mb-xs">
-                      {doc.name}
-                    </h4>
-                    <p className="text-primary dark:text-primary-fixed-dim font-label-md text-label-md mb-md">
-                      {doc.specialty}
-                    </p>
-                    <div className="flex items-center gap-sm text-on-surface-variant dark:text-slate-400 font-body-sm text-body-sm mb-lg">
-                      <span className="material-symbols-outlined text-[16px] text-green-500">verified</span>
-                      {doc.experience}
-                    </div>
-                  </div>
-                  <button 
-                    onClick={() => onBookConsultation(doc.name, doc.department)}
-                    className="w-full py-sm border border-primary dark:border-primary-fixed-dim text-primary dark:text-primary-fixed-dim font-label-md text-label-md rounded hover:bg-primary-fixed dark:hover:bg-slate-700 transition-colors active:scale-[0.98]"
-                  >
-                    Book Consultation
-                  </button>
+        {/* Specialists Directory Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter max-w-6xl mx-auto">
+          {filteredDoctors.map((doc) => (
+            <div 
+              key={doc.id} 
+              className="bg-white dark:bg-slate-800 rounded-xl border border-outline-variant dark:border-slate-700 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 hover:border-primary dark:hover:border-primary-fixed-dim flex flex-col justify-between"
+            >
+              <div className="h-64 overflow-hidden relative">
+                <img 
+                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" 
+                  alt={doc.name} 
+                  src={doc.image}
+                />
+                <div className="absolute top-md right-md bg-secondary-container text-on-secondary-container dark:text-teal-900 px-sm py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                  {t(`doctors.department.${doc.department}`)}
                 </div>
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-xl bg-white dark:bg-slate-800 rounded-xl border border-outline-variant dark:border-slate-700 max-w-xl mx-auto">
-            <span className="material-symbols-outlined text-[48px] text-slate-300 dark:text-slate-600 mb-md">
-              person_search
-            </span>
-            <h4 className="font-headline-md text-headline-md text-on-surface dark:text-white">No Specialists Found</h4>
-            <p className="font-body-sm text-body-sm text-on-surface-variant dark:text-slate-400 mt-sm">
-              We couldn't find any specialist matching "{searchQuery}" in department "{selectedDepartment}". Please try another search.
-            </p>
-            <button 
-              onClick={() => { setSearchQuery(''); setSelectedDepartment('All'); }}
-              className="mt-md text-primary dark:text-primary-fixed-dim font-label-md text-label-md hover:underline"
-            >
-              Reset Search & Filters
-            </button>
-          </div>
-        )}
+              <div className="p-md flex-grow space-y-sm flex flex-col justify-between min-h-[140px]">
+                <div>
+                  <h4 className="font-headline-md text-headline-md text-on-surface dark:text-white leading-tight mb-xs truncate" title={doc.name}>
+                    {doc.name}
+                  </h4>
+                  <p className="font-body-sm text-body-sm text-primary dark:text-sky-400 font-semibold truncate" title={t(`doctors.specialty.${doc.specialty}`)}>
+                    {t(`doctors.specialty.${doc.specialty}`)}
+                  </p>
+                </div>
+                <div className="flex items-center gap-sm text-on-surface-variant dark:text-slate-400">
+                  <span className="material-symbols-outlined text-[18px] shrink-0">work_history</span>
+                  <span className="font-body-sm truncate">{t(`doctors.experience.${doc.experience}`)}</span>
+                </div>
+              </div>
+              <div className="p-md pt-0 shrink-0">
+                <button 
+                  onClick={() => onBookConsultation(doc.name, doc.department)}
+                  className="w-full py-sm border border-primary dark:border-sky-400/50 text-primary dark:text-sky-400 font-label-md text-label-md rounded-lg hover:bg-primary dark:hover:bg-slate-700 hover:text-white transition-all active:scale-[0.98] cursor-pointer whitespace-nowrap"
+                >
+                  {t('doctors.bookBtn')}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

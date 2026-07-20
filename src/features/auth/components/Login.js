@@ -2,12 +2,13 @@ import React, { useState, useContext } from 'react';
 
 import { ToastContext } from '../../../shared/context/ToastContext';
 import { AuthContext } from '../context/AuthContext';
+import { LanguageContext } from '../../../shared/context/LanguageContext';
 
 export default function Login({ onNavigate }) {
   const { login } = useContext(AuthContext);
   const { success, error } = useContext(ToastContext);
+  const { lang, setLang, t } = useContext(LanguageContext);
 
-  const [lang, setLang] = useState('EN'); // 'EN' or 'VN'
   const [identity, setIdentity] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -22,13 +23,13 @@ export default function Login({ onNavigate }) {
     const newErrors = {};
 
     if (!identity.trim()) {
-      newErrors.identity = lang === 'EN' ? 'Username or Email is required.' : 'Tài khoản hoặc Email là bắt buộc.';
+      newErrors.identity = t('login.validation.identityRequired');
     }
     
     if (!password) {
-      newErrors.password = lang === 'EN' ? 'Password is required.' : 'Mật khẩu là bắt buộc.';
+      newErrors.password = t('login.validation.passwordRequired');
     } else if (password.length < 6) {
-      newErrors.password = lang === 'EN' ? 'Password must be at least 6 characters.' : 'Mật khẩu phải dài ít nhất 6 ký tự.';
+      newErrors.password = t('login.validation.passwordLength');
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -42,7 +43,7 @@ export default function Login({ onNavigate }) {
     login(identity, password)
       .then((user) => {
         setLoading(false);
-        const msg = lang === 'EN' ? 'Login successful! Redirecting...' : 'Đăng nhập thành công! Đang chuyển hướng...';
+        const msg = t('login.successRedirect');
         success(msg);
         setSuccessMsg(msg);
         setTimeout(() => {
@@ -51,7 +52,7 @@ export default function Login({ onNavigate }) {
       })
       .catch((err) => {
         setLoading(false);
-        const errMsg = err.message || (lang === 'EN' ? 'Invalid credentials.' : 'Thông tin đăng nhập không chính xác.');
+        const errMsg = err.message || t('login.invalidCredentials');
         error(errMsg);
         setErrors({
           apiError: errMsg
@@ -72,11 +73,11 @@ export default function Login({ onNavigate }) {
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-teal-500/20 dark:bg-teal-500/35 blur-[120px] pointer-events-none z-0 animate-pulse" />
       
       {/* Language Switcher (Top Right) */}
-      <div className="fixed top-lg right-lg z-50 flex gap-sm bg-surface-container-low dark:bg-slate-800 p-xs rounded shadow-sm border border-outline-variant dark:border-slate-700 transition-colors duration-200">
+      <div className="fixed top-lg right-lg z-50 flex gap-sm bg-surface-container-low dark:bg-slate-800 p-xs rounded shadow-sm border border-outline-variant dark:border-slate-700 transition-colors duration-200 select-none">
         <button 
-          onClick={() => setLang('EN')}
-          className={`px-sm py-xs font-label-md text-label-md rounded shadow-sm transition-all ${
-            lang === 'EN' 
+          onClick={() => setLang('en')}
+          className={`px-sm py-xs font-label-md text-label-md rounded shadow-sm transition-all cursor-pointer ${
+            lang === 'en' 
               ? 'text-primary dark:text-sky-400 bg-surface-container-lowest dark:bg-slate-700 font-semibold' 
               : 'text-on-surface-variant dark:text-slate-400 hover:text-primary'
           }`}
@@ -84,9 +85,9 @@ export default function Login({ onNavigate }) {
           EN
         </button>
         <button 
-          onClick={() => setLang('VN')}
-          className={`px-sm py-xs font-label-md text-label-md rounded shadow-sm transition-all ${
-            lang === 'VN' 
+          onClick={() => setLang('vi')}
+          className={`px-sm py-xs font-label-md text-label-md rounded shadow-sm transition-all cursor-pointer ${
+            lang === 'vi' || lang === 'vn'
               ? 'text-primary dark:text-sky-400 bg-surface-container-lowest dark:bg-slate-700 font-semibold' 
               : 'text-on-surface-variant dark:text-slate-400 hover:text-primary'
           }`}
@@ -104,14 +105,14 @@ export default function Login({ onNavigate }) {
           className="absolute top-4 left-4 inline-flex items-center gap-1 font-semibold text-xs text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-sky-400 transition-colors cursor-pointer z-20"
         >
           <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-          {lang === 'EN' ? 'Back to Home' : 'Quay lại Trang chủ'}
+          {lang === 'en' ? 'Back to Home' : 'Quay lại Trang chủ'}
         </button>
 
-        <div className="w-full mx-auto mt-4">
+        <div className="w-full mx-auto mt-4 text-left">
 
           {/* Logo Header */}
-          <div className="flex flex-col items-center gap-sm mb-lg text-center">
-            <div className="flex items-center gap-md cursor-pointer hover:scale-105 transition-transform" onClick={() => onNavigate('home')}>
+          <div className="flex flex-col items-center gap-sm mb-lg text-center select-none">
+            <div className="flex items-center gap-md cursor-pointer hover:scale-105 transition-transform animate-in fade-in duration-300" onClick={() => onNavigate('home')}>
               <span className="material-symbols-outlined text-primary dark:text-sky-400 text-headline-xl" style={{ fontVariationSettings: "'FILL' 1" }}>
                 medical_services
               </span>
@@ -133,11 +134,11 @@ export default function Login({ onNavigate }) {
             ) : (
               <div>
                 <header className="mb-xl">
-                  <h2 className="font-headline-lg text-headline-lg text-on-surface dark:text-white mb-xs">
-                    {lang === 'EN' ? 'Professional Portal' : 'Cổng thông tin chuyên nghiệp'}
+                  <h2 className="font-headline-lg text-headline-lg text-on-surface dark:text-white mb-xs min-h-[32px]">
+                    {lang === 'en' ? 'Professional Portal' : 'Cổng thông tin chuyên nghiệp'}
                   </h2>
-                  <p className="font-body-md text-body-md text-on-surface-variant dark:text-slate-400">
-                    {lang === 'EN' 
+                  <p className="font-body-md text-body-md text-on-surface-variant dark:text-slate-400 min-h-[40px]">
+                    {lang === 'en' 
                       ? 'Sign in to access patient records and clinical tools.'
                       : 'Đăng nhập để truy cập hồ sơ bệnh nhân và công cụ lâm sàng.'
                     }
@@ -153,8 +154,8 @@ export default function Login({ onNavigate }) {
                   )}
                   {/* Username/Email Field */}
                   <div className="space-y-xs">
-                    <label className="block font-label-md text-label-md text-on-surface-variant dark:text-slate-300" htmlFor="identity">
-                      {lang === 'EN' ? 'Username or Email' : 'Tên tài khoản hoặc Email'}
+                    <label className="block font-label-md text-label-md text-on-surface-variant dark:text-slate-300 select-none" htmlFor="identity">
+                      {t('login.identityLabel')}
                     </label>
                     <div className="relative group">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant dark:text-slate-400 transition-colors duration-200 group-focus-within:text-primary">
@@ -163,7 +164,7 @@ export default function Login({ onNavigate }) {
                       <input 
                         type="text"
                         id="identity" 
-                        placeholder={lang === 'EN' ? 'Enter your credentials' : 'Nhập tài khoản của bạn'}
+                        placeholder={t('login.identityPlaceholder')}
                         value={identity}
                         onChange={(e) => { setIdentity(e.target.value); setErrors({...errors, identity: ''}); }}
                         required
@@ -181,15 +182,15 @@ export default function Login({ onNavigate }) {
                   {/* Password Field */}
                   <div className="space-y-xs">
                     <div className="flex justify-between items-center">
-                      <label className="block font-label-md text-label-md text-on-surface-variant dark:text-slate-300" htmlFor="password">
-                        {lang === 'EN' ? 'Password' : 'Mật khẩu'}
+                      <label className="block font-label-md text-label-md text-on-surface-variant dark:text-slate-300 select-none" htmlFor="password">
+                        {t('login.passwordLabel')}
                       </label>
                       <button 
                         type="button"
                         onClick={() => onNavigate('forgot-password')}
-                        className="font-label-md text-label-md text-primary dark:text-sky-400 hover:underline"
+                        className="font-label-md text-label-md text-primary dark:text-sky-400 hover:underline cursor-pointer"
                       >
-                        {lang === 'EN' ? 'Forgot Password?' : 'Quên mật khẩu?'}
+                        {t('login.forgotPassword')}
                       </button>
                     </div>
                     <div className="relative group">
@@ -208,7 +209,7 @@ export default function Login({ onNavigate }) {
                       <button 
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-md top-1/2 -translate-y-1/2 text-on-surface-variant dark:text-slate-400 hover:text-on-surface dark:hover:text-white transition-colors"
+                        className="absolute right-md top-1/2 -translate-y-1/2 text-on-surface-variant dark:text-slate-400 hover:text-on-surface dark:hover:text-white transition-colors cursor-pointer"
                       >
                         <span className="material-symbols-outlined">
                           {showPassword ? 'visibility_off' : 'visibility'}
@@ -233,7 +234,7 @@ export default function Login({ onNavigate }) {
                       className="rounded border-slate-300 dark:border-slate-700 text-primary dark:bg-slate-800 focus:ring-primary w-4 h-4 cursor-pointer"
                     />
                     <label className="font-body-md text-body-md text-on-surface-variant dark:text-slate-300 cursor-pointer select-none" htmlFor="remember">
-                      {lang === 'EN' ? 'Remember this device' : 'Ghi nhớ thiết bị này'}
+                      {t('login.rememberMe')}
                     </label>
                   </div>
 
@@ -241,13 +242,13 @@ export default function Login({ onNavigate }) {
                   <button 
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-primary hover:bg-primary/90 dark:bg-sky-600 dark:hover:bg-sky-500 text-white py-md rounded-lg font-label-md text-label-md uppercase tracking-wider shadow-sm hover:shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-sm disabled:opacity-50"
+                    className="w-full bg-primary hover:bg-primary/90 dark:bg-sky-600 dark:hover:bg-sky-500 text-white py-md rounded-lg font-label-md text-label-md uppercase tracking-wider shadow-sm hover:shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-sm disabled:opacity-50 cursor-pointer"
                   >
                     {loading ? (
                       <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
                     ) : (
                       <>
-                        {lang === 'EN' ? 'Login to Dashboard' : 'Đăng nhập vào bảng điều khiển'}
+                        {t('login.submitBtn')}
                         <span className="material-symbols-outlined text-[20px]">login</span>
                       </>
                     )}
@@ -257,25 +258,25 @@ export default function Login({ onNavigate }) {
                 {/* Support & Registration */}
                 <footer className="mt-xl pt-xl border-t border-outline-variant dark:border-slate-800 text-center space-y-md">
                   <p className="font-body-md text-body-md text-on-surface-variant dark:text-slate-400">
-                    {lang === 'EN' ? 'Patient seeking medical history?' : 'Bệnh nhân đang tìm kiếm lịch sử y tế?'}
+                    {t('login.registerPrompt')}
                   </p>
                   <button 
                     onClick={() => onNavigate('register')}
-                    className="inline-flex items-center gap-xs font-label-md text-label-md text-primary dark:text-sky-400 bg-primary/10 dark:bg-sky-500/10 hover:bg-primary/20 dark:hover:bg-sky-500/20 px-lg py-sm rounded-full transition-all"
+                    className="inline-flex items-center gap-xs font-label-md text-label-md text-primary dark:text-sky-400 bg-primary/10 dark:bg-sky-500/10 hover:bg-primary/20 dark:hover:bg-sky-500/20 px-lg py-sm rounded-full transition-all cursor-pointer"
                   >
-                    {lang === 'EN' ? 'Register for a Patient Account' : 'Đăng ký tài khoản bệnh nhân'}
+                    {t('login.registerBtn')}
                     <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                   </button>
                   
                   <div className="pt-xl flex flex-wrap justify-center gap-md font-body-sm text-body-sm text-on-surface-variant dark:text-slate-400 opacity-60">
-                    <button className="hover:text-primary hover:underline">{lang === 'EN' ? 'Support Center' : 'Trung tâm hỗ trợ'}</button>
+                    <button className="hover:text-primary hover:underline cursor-pointer">{lang === 'en' ? 'Support Center' : 'Trung tâm hỗ trợ'}</button>
                     <span>•</span>
-                    <button className="hover:text-primary hover:underline">{lang === 'EN' ? 'Privacy Standards' : 'Tiêu chuẩn bảo mật'}</button>
+                    <button className="hover:text-primary hover:underline cursor-pointer">{lang === 'en' ? 'Privacy Standards' : 'Tiêu chuẩn bảo mật'}</button>
                     <span>•</span>
-                    <button className="hover:text-primary hover:underline">{lang === 'EN' ? 'Terms' : 'Điều khoản'}</button>
+                    <button className="hover:text-primary hover:underline cursor-pointer">{lang === 'en' ? 'Terms' : 'Điều khoản'}</button>
                   </div>
                   
-                  <p className="font-body-sm text-body-sm text-on-surface-variant dark:text-slate-500 opacity-50 mt-sm">
+                  <p className="font-body-sm text-body-sm text-on-surface-variant dark:text-slate-500 opacity-50 mt-sm select-none">
                     © 2026 MedCore Systems. HIPAA Compliant Interface.
                   </p>
                 </footer>
