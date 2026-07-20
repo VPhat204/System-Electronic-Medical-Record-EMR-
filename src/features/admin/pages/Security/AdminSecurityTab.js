@@ -1,31 +1,31 @@
 import React from 'react';
+import useAdminSecurity from '../../hooks/useAdminSecurity';
+import { loginTrendData } from '../../components/mockData';
 
-export default function AdminSecurityTab({
-  lang,
-  t,
-  threatPulse,
-  pwMinLen,
-  setPwMinLen,
-  pwCaps,
-  setPwCaps,
-  pwSpecial,
-  setPwSpecial,
-  pwNum,
-  setPwNum,
-  pwNoUser,
-  setPwNoUser,
-  pwExpiry,
-  setPwExpiry,
-  showAddIp,
-  setShowAddIp,
-  newIpVal,
-  setNewIpVal,
-  newIpLabel,
-  setNewIpLabel,
-  ipList,
-  setIpList,
-  loginTrendData,
-}) {
+export default function AdminSecurityTab({ lang, t }) {
+  const {
+    threatPulse,
+    pwMinLen,
+    setPwMinLen,
+    pwCaps,
+    setPwCaps,
+    pwSpecial,
+    setPwSpecial,
+    pwNum,
+    setPwNum,
+    pwNoUser,
+    setPwNoUser,
+    pwExpiry,
+    setPwExpiry,
+    showAddIp,
+    setShowAddIp,
+    newIpVal,
+    setNewIpVal,
+    newIpLabel,
+    setNewIpLabel,
+    ipList,
+    setIpList
+  } = useAdminSecurity();
   return (
     <div className="space-y-6 text-left relative pb-16">
       {/* Page header */}

@@ -1,16 +1,16 @@
 import React from 'react';
+import useAdminMaintenance from '../../hooks/useAdminMaintenance';
+import { maintLogs } from '../../components/mockData';
 
-export default function AdminMaintenanceTab({
-  lang,
-  t,
-  maintenanceMode,
-  setMaintenanceMode,
-  showHealthModal,
-  setShowHealthModal,
-  healthScanDone,
-  runHealthCheck,
-  maintLogs,
-}) {
+export default function AdminMaintenanceTab({ lang, t }) {
+  const {
+    maintenanceMode,
+    setMaintenanceMode,
+    showHealthModal,
+    setShowHealthModal,
+    healthScanDone,
+    runHealthCheck
+  } = useAdminMaintenance();
   return (
     <div className="space-y-gutter text-left">
 

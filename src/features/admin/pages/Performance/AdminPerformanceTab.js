@@ -1,15 +1,14 @@
 import React from 'react';
+import useAdminPerformance from '../../hooks/useAdminPerformance';
 
-export default function AdminPerformanceTab({
-  lang,
-  t,
-  isDark,
-  isRefreshingPerf,
-  globalUptime,
-  dbInstances,
-  setDbInstances,
-  handleRefreshPerformance,
-}) {
+export default function AdminPerformanceTab({ lang, t, isDark }) {
+  const {
+    dbInstances,
+    isRefreshingPerf,
+    globalUptime,
+    handleRefreshPerformance
+  } = useAdminPerformance();
+
   return (
     <div className="space-y-lg">
       {/* Scanline Animation CSS Declarations */}

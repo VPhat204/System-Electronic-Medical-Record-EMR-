@@ -1,34 +1,32 @@
 import React from 'react';
+import useAdminSettings from '../../hooks/useAdminSettings';
 
-export default function AdminSettingsTab({
-  lang,
-  setLang,
-  t,
-  maintenanceMode,
-  modulesState,
-  setModulesState,
-  hospitalSettings,
-  setHospitalSettings,
-  systemLang,
-  setSystemLang,
-  systemTimezone,
-  setSystemTimezone,
-  systemDateFormat,
-  setSystemDateFormat,
-  smtpEnabled,
-  setSmtpEnabled,
-  smtpHost,
-  setSmtpHost,
-  smtpPort,
-  setSmtpPort,
-  smtpUser,
-  setSmtpUser,
-  pushPatient,
-  setPushPatient,
-  pushDoctor,
-  setPushDoctor,
-  setActiveTab,
-}) {
+export default function AdminSettingsTab({ lang, setLang, t }) {
+  const {
+    maintenanceMode,
+    hospitalSettings,
+    setHospitalSettings,
+    smtpEnabled,
+    setSmtpEnabled,
+    smtpHost,
+    setSmtpHost,
+    smtpPort,
+    setSmtpPort,
+    smtpUser,
+    setSmtpUser,
+    pushPatient,
+    setPushPatient,
+    pushDoctor,
+    setPushDoctor,
+    systemLang,
+    setSystemLang,
+    systemTimezone,
+    setSystemTimezone,
+    systemDateFormat,
+    setSystemDateFormat,
+    modulesState,
+    setModulesState
+  } = useAdminSettings();
   return (
     <div className="space-y-gutter text-left">
       

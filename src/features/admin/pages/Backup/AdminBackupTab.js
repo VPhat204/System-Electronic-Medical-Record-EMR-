@@ -1,13 +1,13 @@
 import React from 'react';
+import useAdminBackup from '../../hooks/useAdminBackup';
 
-export default function AdminBackupTab({
-  lang,
-  t,
-  isBackingUp,
-  backupProgress,
-  backupHistory,
-  handleStartBackup,
-}) {
+export default function AdminBackupTab({ lang, t }) {
+  const {
+    isBackingUp,
+    backupProgress,
+    backupHistory,
+    handleStartBackup
+  } = useAdminBackup();
   return (
     <div className="space-y-gutter text-left">
       {/* Page header */}

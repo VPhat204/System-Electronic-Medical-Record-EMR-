@@ -1,6 +1,10 @@
 import React from 'react';
+import useAdminUsers from '../../hooks/useAdminUsers';
+import { initialLogs } from '../../components/mockData';
 
-export default function AdminDashboardTab({ lang, t, onNavigate, usersList, logsList, setActiveTab }) {
+export default function AdminDashboardTab({ lang, t, onNavigate, setActiveTab }) {
+  const { usersList } = useAdminUsers(lang);
+  const logsList = initialLogs;
   return (
     <div className="space-y-6">
       {/* Header section */}
