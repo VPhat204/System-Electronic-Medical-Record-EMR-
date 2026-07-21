@@ -125,13 +125,6 @@ export default function Navbar({ theme, toggleTheme, onOpenAuth, onNavigate, cur
                       <span className="material-symbols-outlined text-[18px]">dashboard</span>
                       {user.role === 'patient' ? t('navbar.backToPatient') : t('navbar.dashboard')}
                     </button>
-                    <button 
-                      onClick={() => { onNavigate('home', true); setDropdownOpen(false); }}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 flex items-center gap-2 transition-colors border-t border-slate-100 dark:border-slate-700/50 mt-1 cursor-pointer"
-                    >
-                      <span className="material-symbols-outlined text-[18px] text-red-600">logout</span>
-                      {t('navbar.logout')}
-                    </button>
                   </div>
                 </>
               )}

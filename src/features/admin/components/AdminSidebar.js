@@ -90,6 +90,13 @@ export default function AdminSidebar({
             <span className="font-label-md text-label-md">{t.helpCenter}</span>
           </a>
           <button
+            onClick={() => onNavigate('home')}
+            className="w-full flex items-center gap-3 px-2 py-2 text-on-surface-variant dark:text-slate-400 hover:bg-surface-container-high dark:hover:bg-slate-800 rounded-md transition-colors"
+          >
+            <span className="material-symbols-outlined">home</span>
+            <span className="font-label-md text-label-md">Quay lại Trang chủ</span>
+          </button>
+          <button
             onClick={onLogout}
             className="w-full flex items-center gap-3 px-2 py-2 text-error hover:bg-error-container/20 rounded-md transition-colors text-left"
           >

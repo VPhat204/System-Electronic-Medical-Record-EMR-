@@ -232,6 +232,7 @@
       "phoneRequired": "Phone number is required.",
       "phoneInvalid": "Phone number must be 10-11 digits."
     },
+    "backToHome": "Back to Home",
     "successMsg": "Registration successful! Redirecting to login...",
     "sidebarTitle": "Patient Registration",
     "sidebarDesc": "Please complete the following steps to establish your electronic medical record.",

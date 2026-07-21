@@ -232,6 +232,7 @@
       "phoneRequired": "Số điện thoại là bắt buộc.",
       "phoneInvalid": "Số điện thoại phải từ 10-11 chữ số."
     },
+    "backToHome": "Quay lại Trang chủ",
     "successMsg": "Đăng ký thành công! Đang chuyển hướng đến trang Đăng nhập...",
     "sidebarTitle": "Đăng ký Bệnh nhân",
     "sidebarDesc": "Vui lòng hoàn thành các bước sau để khởi tạo hồ sơ bệnh án điện tử của bạn.",
