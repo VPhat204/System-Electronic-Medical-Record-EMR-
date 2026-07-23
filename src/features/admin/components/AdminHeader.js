@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useContext } from 'react';
+import { AuthContext } from '../../auth/context/AuthContext';
 
 export default function AdminHeader({
   setIsSidebarOpen,
@@ -11,6 +12,7 @@ export default function AdminHeader({
   t,
   onNavigate
 }) {
+  const { user } = useContext(AuthContext);
   return (
     <header className="flex justify-between items-center h-16 px-6 bg-white dark:bg-slate-950 sticky top-0 z-40 border-b border-outline-variant dark:border-slate-800 transition-colors">
       <div className="flex items-center gap-md w-full max-w-md">
@@ -78,11 +80,15 @@ export default function AdminHeader({
           <img
             className="w-10 h-10 rounded-full object-cover border border-primary-fixed dark:border-slate-700"
             alt="Admin Profile"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTChBNSB76Y9cX0wvEyxGDIdHtW21ddsE8fR7oQuHLlKQmFjYoYY4iTy5I-QyJDPl0tu1yqXFGQEAyebEBeBNOAG5PZJdiYLOnufWUZkYnPZFzRDBcccTvqVxMytF377IrgOQWyBuCfqUnfQ7rHrkzbPz7PU_BZikMsNs7qzi0BE9wgOEP-b-Z7WqC4bXrYk0YQLGVwmuoMLRlT41XMWKQDklDS02nsh0XNe_3tx9WEDILmG1VW2T2"
+            src={user?.avatar ? (user.avatar.startsWith('http') || user.avatar.startsWith('data:image') ? user.avatar : `http://localhost:5000${user.avatar}`) : 'https://lh3.googleusercontent.com/aida-public/AB6AXuBTChBNSB76Y9cX0wvEyxGDIdHtW21ddsE8fR7oQuHLlKQmFjYoYY4iTy5I-QyJDPl0tu1yqXFGQEAyebEBeBNOAG5PZJdiYLOnufWUZkYnPZFzRDBcccTvqVxMytF377IrgOQWyBuCfqUnfQ7rHrkzbPz7PU_BZikMsNs7qzi0BE9wgOEP-b-Z7WqC4bXrYk0YQLGVwmuoMLRlT41XMWKQDklDS02nsh0XNe_3tx9WEDILmG1VW2T2'}
           />
           <div className="hidden sm:block text-left w-44">
-            <p className="font-label-md text-label-md text-on-surface dark:text-white truncate" title="Dr. Julian Reed">Dr. Julian Reed</p>
-            <p className="text-[10px] text-on-surface-variant dark:text-slate-400 uppercase tracking-widest font-semibold truncate" title={t.chiefAdmin}>{t.chiefAdmin}</p>
+            <p className="font-label-md text-label-md text-on-surface dark:text-white truncate" title={user ? user.fullName : "Dr. Julian Reed"}>
+              {user ? user.fullName : "Dr. Julian Reed"}
+            </p>
+            <p className="text-[10px] text-on-surface-variant dark:text-slate-400 font-semibold truncate" title={user ? user.email : t.chiefAdmin}>
+              {user ? user.email : t.chiefAdmin}
+            </p>
           </div>
         </div>
       </div>

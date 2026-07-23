@@ -81,6 +81,35 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const getUserProfile = async () => {
+    if (!token) return null;
+    try {
+      const data = await authService.getProfile(token);
+      return data;
+    } catch (err) {
+      console.error('Failed to get user profile:', err);
+      throw err;
+    }
+  };
+
+  const updateUserProfile = async (profileData) => {
+    if (!token) return null;
+    try {
+      const data = await authService.updateProfile(token, profileData);
+      setUser(prevUser => {
+        if (!prevUser) return prevUser;
+        return {
+          ...prevUser,
+          ...data.user
+        };
+      });
+      return data;
+    } catch (err) {
+      console.error('Failed to update user profile:', err);
+      throw err;
+    }
+  };
+
   const verifyAccount = async (email, code) => {
     setError(null);
     setLoading(true);
@@ -128,7 +157,9 @@ export const AuthProvider = ({ children }) => {
         verifyAccount,
         resendOtp,
         logout,
-        updateUserSettings
+        updateUserSettings,
+        getUserProfile,
+        updateUserProfile
       }}
     >
       {children}

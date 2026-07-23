@@ -12,6 +12,7 @@ import AdminMaintenanceTab from '../pages/Maintenance/AdminMaintenanceTab';
 import AdminSettingsTab from '../pages/Settings/AdminSettingsTab';
 import AdminSidebar from './AdminSidebar';
 import AdminHeader from './AdminHeader';
+import AdminChatWidget from './AdminChatWidget';
 
 
 export default function AdminDashboard({ onNavigate, theme: propTheme, setTheme: propSetTheme, lang: propLang, setLang: propSetLang }) {
@@ -218,6 +219,9 @@ export default function AdminDashboard({ onNavigate, theme: propTheme, setTheme:
           )}
         </div>
       </main>
+
+      {/* Floating Chat Widget - hidden on Security tab */}
+      <AdminChatWidget lang={lang} />
     </div>
   );
 }

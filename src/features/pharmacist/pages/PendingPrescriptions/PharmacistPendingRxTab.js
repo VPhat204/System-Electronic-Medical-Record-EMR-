@@ -1,252 +1,251 @@
-import React, { useState } from 'react';
-
-const initialPrescriptions = [
-  {
-    id: 'PRSC-2026-0088',
-    patient: 'Nguyễn Thị Hoa',
-    patientId: 'BN-00214',
-    doctor: 'BS. Trần Văn Minh',
-    prescribedAt: '15/07/2026 08:30',
-    diagnosis: 'Viêm phế quản cấp',
-    medications: [
-      { name: 'Amoxicillin', dosage: '500mg', frequency: '3 lần/ngày', duration: '7 ngày', route: 'Uống' },
-      { name: 'Dextromethorphan', dosage: '15mg', frequency: '3 lần/ngày', duration: '5 ngày', route: 'Uống' },
-    ],
-    status: 'pending',
-    priority: 'normal',
-    allergies: [],
-  },
-  {
-    id: 'PRSC-2026-0087',
-    patient: 'Lê Văn Cường',
-    patientId: 'BN-00198',
-    doctor: 'BS. Phạm Thị Lan',
-    prescribedAt: '15/07/2026 09:10',
-    diagnosis: 'Tăng huyết áp giai đoạn II',
-    medications: [
-      { name: 'Amlodipine', dosage: '10mg', frequency: '1 lần/ngày', duration: '30 ngày', route: 'Uống' },
-      { name: 'Losartan', dosage: '50mg', frequency: '1 lần/ngày', duration: '30 ngày', route: 'Uống' },
-    ],
-    status: 'pending',
-    priority: 'urgent',
-    allergies: ['Penicillin'],
-  },
-  {
-    id: 'PRSC-2026-0086',
-    patient: 'Trần Thị Bình',
-    patientId: 'BN-00177',
-    doctor: 'BS. Nguyễn Hữu Nghĩa',
-    prescribedAt: '15/07/2026 07:45',
-    diagnosis: 'Đái tháo đường type 2',
-    medications: [
-      { name: 'Metformin', dosage: '1000mg', frequency: '2 lần/ngày', duration: '30 ngày', route: 'Uống' },
-    ],
-    status: 'preparing',
-    priority: 'normal',
-    allergies: [],
-  },
-  {
-    id: 'PRSC-2026-0085',
-    patient: 'Hoàng Văn Nam',
-    patientId: 'BN-00155',
-    doctor: 'BS. Lê Thị Thu',
-    prescribedAt: '14/07/2026 16:20',
-    diagnosis: 'Đau sau phẫu thuật',
-    medications: [
-      { name: 'Tramadol', dosage: '50mg', frequency: 'Khi đau (tối đa 4 lần/ngày)', duration: '3 ngày', route: 'Uống' },
-      { name: 'Paracetamol', dosage: '1000mg', frequency: '3 lần/ngày', duration: '5 ngày', route: 'Uống' },
-    ],
-    status: 'dispensed',
-    priority: 'normal',
-    allergies: [],
-  },
-];
+import React, { useState, useEffect, useCallback } from 'react';
+import prescriptionService from '../../../../shared/services/prescriptionService';
 
 const statusConfig = {
-  pending: { viLabel: 'Chờ duyệt', enLabel: 'Pending', color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700' },
-  preparing: { viLabel: 'Đang chuẩn bị', enLabel: 'Preparing', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700' },
-  dispensed: { viLabel: 'Đã cấp phát', enLabel: 'Dispensed', color: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700' },
-  cancelled: { viLabel: 'Đã hủy', enLabel: 'Cancelled', color: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-300 dark:border-red-700' },
+  PENDING_DISPENSE: { viLabel: 'Chờ duyệt', enLabel: 'Pending', color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700' },
+  DISPENSED: { viLabel: 'Đã cấp phát', enLabel: 'Dispensed', color: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700' },
+  CANCELLED: { viLabel: 'Đã hủy', enLabel: 'Cancelled', color: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-300 dark:border-red-700' },
 };
 
-export default function PharmacistPendingRxTab({ lang, t }) {
-  const [prescriptions, setPrescriptions] = useState(initialPrescriptions);
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [expandedId, setExpandedId] = useState('PRSC-2026-0087');
+const formatDate = (dateStr) => {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('vi-VN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+};
 
-  const filtered = filterStatus === 'all' ? prescriptions : prescriptions.filter(p => p.status === filterStatus);
+export default function PharmacistPendingRxTab({ lang, t, token }) {
+  const [prescriptions, setPrescriptions] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [filterStatus, setFilterStatus] = useState('PENDING_DISPENSE');
+  const [expandedId, setExpandedId] = useState(null);
+  const [actionSuccess, setActionSuccess] = useState('');
+  const [actionError, setActionError] = useState('');
 
-  const handleApprove = (id) => {
-    setPrescriptions(prev => prev.map(p => p.id === id ? { ...p, status: 'preparing' } : p));
+  const activeToken = token || localStorage.getItem('token');
+
+  const fetchPrescriptions = useCallback(async () => {
+    if (!activeToken) return;
+    setIsLoading(true);
+    setActionError('');
+    try {
+      const data = await prescriptionService.getPendingPrescriptions(activeToken, filterStatus === 'ALL' ? '' : filterStatus);
+      setPrescriptions(Array.isArray(data) ? data : []);
+      if (data && data.length > 0 && !expandedId) {
+        setExpandedId(data[0].id);
+      }
+    } catch (err) {
+      console.error('Fetch pending prescriptions error:', err);
+      setActionError(err.message || (lang === 'vi' ? 'Không thể tải danh sách đơn thuốc.' : 'Failed to fetch prescriptions.'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [activeToken, filterStatus, lang]);
+
+  useEffect(() => {
+    fetchPrescriptions();
+  }, [fetchPrescriptions]);
+
+  const handleDispense = async (rxId) => {
+    if (!activeToken) return;
+    setActionError('');
+    setActionSuccess('');
+    try {
+      await prescriptionService.dispensePrescription(activeToken, rxId);
+      setActionSuccess(lang === 'vi' ? `Đã xác nhận phát đơn thuốc #${rxId} và tự động trừ số lượng tồn kho!` : `Prescription #${rxId} dispensed & stock deducted successfully!`);
+      setTimeout(() => setActionSuccess(''), 4000);
+      fetchPrescriptions();
+    } catch (err) {
+      console.error('Dispense error:', err);
+      setActionError(err.message || (lang === 'vi' ? 'Lỗi khi duyệt phát thuốc.' : 'Failed to dispense prescription.'));
+    }
   };
 
-  const handleDispense = (id) => {
-    setPrescriptions(prev => prev.map(p => p.id === id ? { ...p, status: 'dispensed' } : p));
-  };
-
-  const handleCancel = (id) => {
-    setPrescriptions(prev => prev.map(p => p.id === id ? { ...p, status: 'cancelled' } : p));
-  };
-
-  const pendingCount = prescriptions.filter(p => p.status === 'pending').length;
-  const preparingCount = prescriptions.filter(p => p.status === 'preparing').length;
+  const pendingCount = prescriptions.filter(p => p.status === 'PENDING_DISPENSE').length;
+  const dispensedCount = prescriptions.filter(p => p.status === 'DISPENSED').length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-left">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="font-headline-lg text-headline-lg font-bold text-on-surface dark:text-white">
-            {lang === 'vi' ? 'Đơn Thuốc Chờ Duyệt' : 'Pending Prescriptions'}
+            {lang === 'vi' ? 'Đơn Thuốc Chờ Duyệt & Cấp Phát' : 'Pending Prescriptions'}
           </h2>
           <p className="font-body-sm text-body-sm text-on-surface-variant dark:text-slate-400 mt-1">
-            {lang === 'vi' ? 'Xem xét, duyệt và cấp phát đơn thuốc điện tử từ bác sĩ' : 'Review, approve and dispense electronic prescriptions from doctors'}
+            {lang === 'vi' ? 'Xem xét, duyệt và cấp phát đơn thuốc điện tử từ bác sĩ thời gian thực' : 'Review, approve and dispense electronic prescriptions from doctors'}
           </p>
         </div>
         <div className="flex gap-3">
           <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg px-4 py-2 text-center">
             <p className="text-2xl font-black text-amber-700 dark:text-amber-300">{pendingCount}</p>
-            <p className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold uppercase tracking-wide">{lang === 'vi' ? 'Chờ duyệt' : 'Pending'}</p>
+            <p className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold uppercase tracking-wide">{lang === 'vi' ? 'Chờ phát' : 'Pending'}</p>
           </div>
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg px-4 py-2 text-center">
-            <p className="text-2xl font-black text-blue-700 dark:text-blue-300">{preparingCount}</p>
-            <p className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold uppercase tracking-wide">{lang === 'vi' ? 'Đang pha chế' : 'Preparing'}</p>
+          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg px-4 py-2 text-center">
+            <p className="text-2xl font-black text-green-700 dark:text-green-300">{dispensedCount}</p>
+            <p className="text-[10px] text-green-600 dark:text-green-400 font-semibold uppercase tracking-wide">{lang === 'vi' ? 'Đã phát' : 'Dispensed'}</p>
           </div>
         </div>
       </div>
 
+      {/* SUCCESS / ERROR ALERTS */}
+      {actionSuccess && (
+        <div className="bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 text-green-800 dark:text-green-200 rounded-xl p-4 flex items-center gap-2 text-sm font-semibold">
+          <span className="material-symbols-outlined">check_circle</span>
+          {actionSuccess}
+        </div>
+      )}
+      {actionError && (
+        <div className="bg-error-container/20 border border-error/30 text-error rounded-xl p-4 flex items-center gap-2 text-sm">
+          <span className="material-symbols-outlined">warning</span>
+          {actionError}
+        </div>
+      )}
+
       {/* Filter Tabs */}
       <div className="flex gap-2 border-b border-outline-variant dark:border-slate-800 pb-1">
         {[
-          { key: 'all', viLabel: 'Tất cả', enLabel: 'All' },
-          { key: 'pending', viLabel: 'Chờ duyệt', enLabel: 'Pending' },
-          { key: 'preparing', viLabel: 'Đang pha chế', enLabel: 'Preparing' },
-          { key: 'dispensed', viLabel: 'Đã cấp phát', enLabel: 'Dispensed' },
+          { key: 'PENDING_DISPENSE', viLabel: 'Chờ cấp phát', enLabel: 'Pending Dispense' },
+          { key: 'DISPENSED', viLabel: 'Đã cấp phát', enLabel: 'Dispensed' },
+          { key: 'ALL', viLabel: 'Tất cả đơn', enLabel: 'All Prescriptions' },
         ].map(f => (
           <button
             key={f.key}
             onClick={() => setFilterStatus(f.key)}
-            className={'px-4 py-2 text-sm font-semibold rounded-t-lg transition-colors ' + (filterStatus === f.key ? 'bg-primary text-white' : 'text-on-surface-variant dark:text-slate-400 hover:bg-surface-container-high dark:hover:bg-slate-800')}
+            className={'px-4 py-2 text-sm font-semibold rounded-t-lg transition-colors ' + (filterStatus === f.key ? 'bg-primary text-white shadow-xs' : 'text-on-surface-variant dark:text-slate-400 hover:bg-surface-container-high dark:hover:bg-slate-800')}
           >
             {lang === 'vi' ? f.viLabel : f.enLabel}
           </button>
         ))}
       </div>
 
-      {/* Prescription Cards */}
+      {/* Prescription Cards List */}
       <div className="space-y-4">
-        {filtered.map(rx => {
-          const cfg = statusConfig[rx.status] || statusConfig.pending;
-          const isExpanded = expandedId === rx.id;
-          return (
-            <div
-              key={rx.id}
-              className={'bg-white dark:bg-slate-900 border rounded-xl overflow-hidden transition-all ' + (rx.priority === 'urgent' ? 'border-error/40 dark:border-red-700/40 shadow-md' : 'border-outline-variant dark:border-slate-800')}
-            >
-              {/* Card Header */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-16 text-primary">
+            <span className="material-symbols-outlined animate-spin text-[36px] mr-2">sync</span>
+            <span className="text-sm font-semibold">{lang === 'vi' ? 'Đang tải đơn thuốc...' : 'Loading prescriptions...'}</span>
+          </div>
+        ) : prescriptions.length === 0 ? (
+          <div className="py-16 text-center text-on-surface-variant dark:text-slate-400 bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl">
+            <span className="material-symbols-outlined text-[48px] text-slate-300 dark:text-slate-600 mb-2">prescriptions</span>
+            <p className="text-sm font-semibold">{lang === 'vi' ? 'Không có đơn thuốc nào trong danh mục này.' : 'No prescriptions in this queue.'}</p>
+          </div>
+        ) : (
+          prescriptions.map(rx => {
+            const cfg = statusConfig[rx.status] || statusConfig.PENDING_DISPENSE;
+            const isExpanded = expandedId === rx.id;
+            const isPending = rx.status === 'PENDING_DISPENSE';
+
+            return (
               <div
-                className="p-4 cursor-pointer flex items-center justify-between gap-4"
-                onClick={() => setExpandedId(isExpanded ? null : rx.id)}
+                key={rx.id}
+                className="bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl overflow-hidden shadow-xs transition-all"
               >
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className={'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm ' + (rx.priority === 'urgent' ? 'bg-error/10 text-error' : 'bg-primary/10 text-primary')}>
-                    {rx.patient.split(' ').map(w => w[0]).slice(-2).join('')}
+                {/* Card Header */}
+                <div
+                  className="p-4 cursor-pointer flex items-center justify-between gap-4 hover:bg-surface-container-low/40 dark:hover:bg-slate-800/40"
+                  onClick={() => setExpandedId(isExpanded ? null : rx.id)}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary-fixed-dim flex items-center justify-center font-bold text-sm">
+                      #{rx.id}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-sm text-on-surface dark:text-white">
+                          {rx.patient?.fullName || (lang === 'vi' ? 'Bệnh nhân' : 'Patient')}
+                        </h4>
+                        <span className={'text-[10px] px-2 py-0.5 rounded-full font-bold border ' + cfg.color}>
+                          {lang === 'vi' ? cfg.viLabel : cfg.enLabel}
+                        </span>
+                      </div>
+                      <p className="text-xs text-on-surface-variant dark:text-slate-400 mt-0.5">
+                        {lang === 'vi' ? 'BS chỉ định:' : 'By:'} {rx.doctor?.fullName || 'BS. Phòng khám'} · {formatDate(rx.createdAt)}
+                      </p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-semibold text-sm text-on-surface dark:text-white">{rx.patient}</p>
-                      <span className="text-[10px] text-on-surface-variant dark:text-slate-500">{rx.patientId}</span>
-                      {rx.priority === 'urgent' && (
-                        <span className="text-[9px] bg-error/10 text-error border border-error/30 px-1.5 py-0.5 rounded-full font-bold uppercase">
-                          {lang === 'vi' ? 'Ưu tiên' : 'Urgent'}
+
+                  <div className="flex items-center gap-3">
+                    {rx.totalAmount > 0 && (
+                      <span className="text-sm font-bold text-primary dark:text-primary-fixed-dim hidden sm:inline">
+                        {Number(rx.totalAmount).toLocaleString('vi-VN')} VNĐ
+                      </span>
+                    )}
+                    <span className="material-symbols-outlined text-slate-400">
+                      {isExpanded ? 'expand_less' : 'expand_more'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Expanded Details */}
+                {isExpanded && (
+                  <div className="p-4 border-t border-outline-variant dark:border-slate-800 bg-surface-container-lowest dark:bg-slate-800/30 space-y-4 text-xs">
+                    {/* Prescription Items Table */}
+                    <div>
+                      <h5 className="font-bold text-on-surface dark:text-white mb-2 uppercase text-[10px] tracking-wider flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[16px] text-primary">medication</span>
+                        {lang === 'vi' ? 'Danh Mục Thuốc Kê Đơn' : 'Prescription Items'}
+                      </h5>
+                      <div className="border border-outline-variant dark:border-slate-700 rounded-lg overflow-hidden">
+                        <table className="w-full text-left border-collapse">
+                          <thead className="bg-surface-container-low dark:bg-slate-800 font-bold text-[10px] uppercase text-on-surface-variant dark:text-slate-400 border-b border-outline-variant dark:border-slate-700">
+                            <tr>
+                              <th className="p-2.5">Tên Thuốc</th>
+                              <th className="p-2.5 text-center">Số Lượng</th>
+                              <th className="p-2.5">Liều Dùng & Hướng Dẫn</th>
+                              <th className="p-2.5 text-right">Đơn Giá</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-outline-variant/60 dark:divide-slate-800">
+                            {rx.items && rx.items.map((item, idx) => (
+                              <tr key={idx}>
+                                <td className="p-2.5 font-bold text-on-surface dark:text-white">
+                                  {item.medicineName} <span className="font-normal text-slate-400 text-[10px]">({item.unit})</span>
+                                </td>
+                                <td className="p-2.5 text-center font-bold text-primary dark:text-primary-fixed-dim">{item.quantity}</td>
+                                <td className="p-2.5 text-on-surface-variant dark:text-slate-300">
+                                  <p className="font-medium">{item.dosage || 'Theo chỉ định'}</p>
+                                  <p className="text-[10px] text-slate-400">{item.instructions || ''}</p>
+                                </td>
+                                <td className="p-2.5 text-right font-medium">
+                                  {Number(item.price || 0).toLocaleString('vi-VN')} đ
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Action Bar */}
+                    <div className="flex items-center justify-between pt-2 border-t border-outline-variant dark:border-slate-700">
+                      <div className="text-on-surface-variant dark:text-slate-400 text-[11px]">
+                        <span>Tổng tiền đơn thuốc: </span>
+                        <span className="font-bold text-sm text-on-surface dark:text-white ml-1">
+                          {Number(rx.totalAmount || 0).toLocaleString('vi-VN')} VNĐ
+                        </span>
+                      </div>
+
+                      {isPending ? (
+                        <button
+                          onClick={() => handleDispense(rx.id)}
+                          className="flex items-center gap-1.5 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold text-xs shadow-xs transition-all active:scale-95"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">task_alt</span>
+                          {lang === 'vi' ? 'Xác Nhận Phát Thuốc' : 'Dispense Prescription'}
+                        </button>
+                      ) : (
+                        <span className="text-xs text-green-600 dark:text-green-400 font-bold flex items-center gap-1">
+                          <span className="material-symbols-outlined text-[16px]">check_circle</span>
+                          {lang === 'vi' ? `Đã phát thuốc (${formatDate(rx.dispensedAt)})` : 'Dispensed'}
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-on-surface-variant dark:text-slate-400">{rx.doctor} · {rx.diagnosis}</p>
-                    <p className="text-[10px] text-on-surface-variant dark:text-slate-500 mt-0.5">{rx.id} · {rx.prescribedAt}</p>
                   </div>
-                </div>
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <span className={'text-[11px] px-3 py-1 rounded-full border font-semibold ' + cfg.color}>
-                    {lang === 'vi' ? cfg.viLabel : cfg.enLabel}
-                  </span>
-                  <span className={'material-symbols-outlined text-[20px] text-on-surface-variant dark:text-slate-400 transition-transform ' + (isExpanded ? 'rotate-180' : '')}>expand_more</span>
-                </div>
+                )}
               </div>
-
-              {/* Expanded Detail */}
-              {isExpanded && (
-                <div className="border-t border-outline-variant dark:border-slate-800 p-4 space-y-4 bg-surface-container-lowest dark:bg-slate-800/50">
-                  {rx.allergies.length > 0 && (
-                    <div className="flex items-center gap-2 bg-error/10 border border-error/30 rounded-lg px-3 py-2">
-                      <span className="material-symbols-outlined text-error text-[18px]">warning</span>
-                      <p className="text-xs font-bold text-error">
-                        {lang === 'vi' ? 'Dị ứng đã ghi nhận: ' : 'Recorded Allergies: '}
-                        {rx.allergies.join(', ')}
-                      </p>
-                    </div>
-                  )}
-
-                  <div>
-                    <p className="text-xs font-bold text-on-surface-variant dark:text-slate-400 uppercase tracking-wide mb-2">
-                      {lang === 'vi' ? 'Danh sách thuốc' : 'Medication List'} ({rx.medications.length})
-                    </p>
-                    <div className="space-y-2">
-                      {rx.medications.map((med, idx) => (
-                        <div key={idx} className="bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-700 rounded-lg p-3 flex items-center gap-3">
-                          <span className="material-symbols-outlined text-primary text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>medication</span>
-                          <div className="flex-grow">
-                            <p className="font-semibold text-sm text-on-surface dark:text-white">{med.name} <span className="font-normal text-primary">{med.dosage}</span></p>
-                            <p className="text-xs text-on-surface-variant dark:text-slate-400">{med.frequency} · {med.duration} · {lang === 'vi' ? 'Đường dùng: ' : 'Route: '}{med.route}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-2 justify-end pt-1">
-                    {rx.status === 'pending' && (
-                      <>
-                        <button
-                          onClick={() => handleCancel(rx.id)}
-                          className="px-3 py-1.5 text-xs border border-error/50 text-error hover:bg-error/10 rounded-lg transition-colors font-semibold"
-                        >
-                          {lang === 'vi' ? 'Từ chối' : 'Reject'}
-                        </button>
-                        <button
-                          onClick={() => handleApprove(rx.id)}
-                          className="px-4 py-1.5 text-xs bg-primary text-white hover:bg-primary-container rounded-lg transition-colors font-semibold"
-                        >
-                          {lang === 'vi' ? 'Duyệt & Pha chế' : 'Approve & Prepare'}
-                        </button>
-                      </>
-                    )}
-                    {rx.status === 'preparing' && (
-                      <button
-                        onClick={() => handleDispense(rx.id)}
-                        className="px-4 py-1.5 text-xs bg-green-600 text-white hover:bg-green-700 rounded-lg transition-colors font-semibold"
-                      >
-                        {lang === 'vi' ? '✓ Xác nhận đã cấp phát' : '✓ Mark as Dispensed'}
-                      </button>
-                    )}
-                    {rx.status === 'dispensed' && (
-                      <span className="px-3 py-1.5 text-xs text-green-700 dark:text-green-400 font-semibold flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[14px]">check_circle</span>
-                        {lang === 'vi' ? 'Đã hoàn tất' : 'Completed'}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-        {filtered.length === 0 && (
-          <div className="bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl p-12 text-center">
-            <span className="material-symbols-outlined text-[48px] text-outline dark:text-slate-600 mb-3 block">inbox</span>
-            <p className="text-on-surface-variant dark:text-slate-400 text-sm">{lang === 'vi' ? 'Không có đơn thuốc nào.' : 'No prescriptions found.'}</p>
-          </div>
+            );
+          })
         )}
       </div>
     </div>

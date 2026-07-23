@@ -1,12 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import BookingModal from '../../features/appointments/components/BookingModal';
+import { AuthContext } from '../../features/auth/context/AuthContext';
+import { LanguageContext } from '../context/LanguageContext';
+import { ToastContext } from '../context/ToastContext';
 
 export default function MainLayout({ theme, toggleTheme }) {
   const navigate = useNavigate();
   const location = useLocation();
+
+  const { user } = useContext(AuthContext);
+  const { lang } = useContext(LanguageContext);
+  const { warning: toastWarning } = useContext(ToastContext);
 
   const [bookingOpen, setBookingOpen] = useState(false);
   const [initialDoctor, setInitialDoctor] = useState('');
@@ -28,6 +35,10 @@ export default function MainLayout({ theme, toggleTheme }) {
   };
 
   const handleOpenBooking = (doctor = '', department = '') => {
+    if (!user) {
+      toastWarning(lang === 'vi' ? 'Vui lòng đăng nhập trước khi thực hiện thao tác này!' : 'Please log in before performing this action!');
+      return;
+    }
     setInitialDoctor(doctor);
     setInitialDepartment(department);
     setBookingOpen(true);

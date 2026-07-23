@@ -9,6 +9,7 @@ export default function DoctorDashboardTab({
   activePatientId,
   setActivePatientId,
   handleStartConsult,
+  handleCompleteConsult,
   activePatient,
 }) {
   return (
@@ -134,9 +135,12 @@ export default function DoctorDashboardTab({
                 </thead>
                 <tbody className="divide-y divide-outline-variant dark:divide-slate-700">
                   {filteredSchedule.map((p) => {
-                    const isConsulting = p.status === 'IN CONSULT';
-                    const isArrived = p.status === 'ARRIVED';
-                    const isWaiting = p.status === 'WAITING';
+                    const isConsulting = p.status === 'IN_PROGRESS';
+                    const isWaiting = p.status === 'CHECKED_IN';
+                    const isConfirmed = p.status === 'CONFIRMED';
+                    const isCompleted = p.status === 'COMPLETED';
+                    const isCancelled = p.status === 'CANCELLED';
+                    const isPending = p.status === 'PENDING';
                     return (
                       <tr
                         key={p.id}
@@ -150,7 +154,7 @@ export default function DoctorDashboardTab({
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-3">
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-[13px] ${isWaiting
-                              ? 'bg-secondary-fixed-dim text-on-secondary-fixed'
+                              ? 'bg-secondary-fixed text-white'
                               : 'bg-surface-container-high dark:bg-slate-700 text-on-surface-variant dark:text-white'
                               }`}>
                               {p.initials}
@@ -168,12 +172,20 @@ export default function DoctorDashboardTab({
                               IN CONSULT
                             </span>
                           ) : isWaiting ? (
-                            <span className="bg-secondary-container text-on-secondary-container dark:text-teal-900 px-3 py-1 rounded-full font-label-md text-[11px] w-fit block">
-                              WAITING (5m)
+                            <span className="bg-amber-155/20 text-amber-800 dark:text-amber-300 px-3 py-1 rounded-full font-label-md text-[11px] w-fit block">
+                              WAITING
                             </span>
-                          ) : isArrived ? (
-                            <span className="bg-secondary-container text-on-secondary-container dark:text-teal-900 px-3 py-1 rounded-full font-label-md text-[11px] w-fit block">
-                              ARRIVED
+                          ) : isConfirmed ? (
+                            <span className="bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-300 px-3 py-1 rounded-full font-label-md text-[11px] w-fit block">
+                              CONFIRMED
+                            </span>
+                          ) : isCompleted ? (
+                            <span className="bg-green-100 text-green-800 dark:bg-green-950/40 dark:text-green-300 px-3 py-1 rounded-full font-label-md text-[11px] w-fit block">
+                              COMPLETED
+                            </span>
+                          ) : isCancelled ? (
+                            <span className="bg-red-105/20 text-red-800 dark:text-red-300 px-3 py-1 rounded-full font-label-md text-[11px] w-fit block">
+                              CANCELLED
                             </span>
                           ) : (
                             <span className="bg-surface-container-high dark:bg-slate-700 text-on-surface-variant dark:text-slate-400 px-3 py-1 rounded-full font-label-md text-[11px] w-fit block">
@@ -183,14 +195,23 @@ export default function DoctorDashboardTab({
                         </td>
                         <td className="px-4 py-4 text-right">
                           {isConsulting ? (
-                            <button onClick={(e) => { e.stopPropagation(); alert(`Báo cáo bệnh án cho ${p.name}`); }} className="text-primary dark:text-primary-fixed-dim hover:underline font-label-md text-label-md">Open Chart</button>
-                          ) : (
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); handleCompleteConsult(p.id); }} 
+                              className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg font-label-md text-[12px]"
+                            >
+                              Complete Exam
+                            </button>
+                          ) : (isWaiting || isConfirmed || isPending) ? (
                             <button
                               onClick={(e) => { e.stopPropagation(); handleStartConsult(p.id); }}
-                              className="bg-primary hover:bg-primary-container text-white px-3 py-1.5 rounded-lg font-label-md text-[12px] opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="bg-primary hover:bg-primary-container text-white px-3 py-1.5 rounded-lg font-label-md text-[12px]"
                             >
                               Start Now
                             </button>
+                          ) : isCompleted ? (
+                            <span className="text-green-600 dark:text-green-400 font-label-md text-label-md font-bold">Done</span>
+                          ) : (
+                            <span className="text-slate-400 font-label-md text-label-md">N/A</span>
                           )}
                         </td>
                       </tr>
@@ -261,49 +282,57 @@ export default function DoctorDashboardTab({
             </button>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 rounded-xl p-5 shadow-sm text-left">
-            <div className="flex justify-between items-center mb-4">
-              <h5 className="font-label-md text-label-md text-on-surface-variant dark:text-slate-400 uppercase">
-                Vitals: {activePatient.name}
-              </h5>
-              <button onClick={() => alert(`Chi tiết sinh hiệu ${activePatient.name}`)} className="text-primary dark:text-primary-fixed-dim">
-                <span className="material-symbols-outlined text-[18px]">open_in_new</span>
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-error-container/10 border border-error-container/30 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-error" style={{ fontVariationSettings: "'FILL' 1" }}>
-                    favorite
+          {activePatient ? (
+            <div className="bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 rounded-xl p-5 shadow-sm text-left">
+              <div className="flex justify-between items-center mb-4">
+                <h5 className="font-label-md text-label-md text-on-surface-variant dark:text-slate-400 uppercase">
+                  Vitals: {activePatient.name}
+                </h5>
+                <button onClick={() => alert(`Chi tiết sinh hiệu ${activePatient.name}`)} className="text-primary dark:text-primary-fixed-dim">
+                  <span className="material-symbols-outlined text-[18px]">open_in_new</span>
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 bg-error-container/10 border border-error-container/30 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <span className="material-symbols-outlined text-error" style={{ fontVariationSettings: "'FILL' 1" }}>
+                      favorite
+                    </span>
+                    <span className="font-body-md text-body-md text-on-surface dark:text-slate-300">BP</span>
+                  </div>
+                  <span className="font-data-mono text-data-mono font-bold text-error">
+                    {activePatient.vitals?.bp || 'N/A'}
                   </span>
-                  <span className="font-body-md text-body-md text-on-surface dark:text-slate-300">BP</span>
                 </div>
-                <span className="font-data-mono text-data-mono font-bold text-error">
-                  {activePatient.vitals.bp}
-                </span>
-              </div>
 
-              <div className="flex items-center justify-between p-3 bg-surface-container-low dark:bg-slate-900 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-primary dark:text-primary-fixed-dim">air</span>
-                  <span className="font-body-md text-body-md text-on-surface dark:text-slate-300">SpO2</span>
+                <div className="flex items-center justify-between p-3 bg-surface-container-low dark:bg-slate-900 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <span className="material-symbols-outlined text-primary dark:text-primary-fixed-dim">air</span>
+                    <span className="font-body-md text-body-md text-on-surface dark:text-slate-300">SpO2</span>
+                  </div>
+                  <span className="font-data-mono text-data-mono font-bold text-on-surface dark:text-white">
+                    {activePatient.vitals?.spo2 || 'N/A'}
+                  </span>
                 </div>
-                <span className="font-data-mono text-data-mono font-bold text-on-surface dark:text-white">
-                  {activePatient.vitals.spo2}
-                </span>
-              </div>
 
-              <div className="flex items-center justify-between p-3 bg-surface-container-low dark:bg-slate-900 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-tertiary dark:text-amber-500">device_thermostat</span>
-                  <span className="font-body-md text-body-md text-on-surface dark:text-slate-300">Temp</span>
+                <div className="flex items-center justify-between p-3 bg-surface-container-low dark:bg-slate-900 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <span className="material-symbols-outlined text-tertiary dark:text-amber-500">device_thermostat</span>
+                    <span className="font-body-md text-body-md text-on-surface dark:text-slate-300">Temp</span>
+                  </div>
+                  <span className="font-data-mono text-data-mono font-bold text-on-surface dark:text-white">
+                    {activePatient.vitals?.temp || 'N/A'}
+                  </span>
                 </div>
-                <span className="font-data-mono text-data-mono font-bold text-on-surface dark:text-white">
-                  {activePatient.vitals.temp}
-                </span>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 rounded-xl p-5 shadow-sm text-center py-8">
+              <p className="text-on-surface-variant dark:text-slate-400 font-label-md">
+                {lang === 'vi' ? 'Chưa có bệnh nhân nào' : 'No patient active'}
+              </p>
+            </div>
+          )}
 
           <div className="relative h-48 rounded-xl overflow-hidden border border-outline-variant dark:border-slate-800 group">
             <div

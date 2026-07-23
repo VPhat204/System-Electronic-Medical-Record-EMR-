@@ -1,18 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { AuthContext } from '../../auth/context/AuthContext';
+import appointmentService from '../services/appointmentService';
 
-const doctorsData = [
-  { name: 'Dr. Robert Sterling', department: 'Cardiology' },
-  { name: 'Dr. Elena Rodriguez', department: 'Pediatrics' },
-  { name: 'Dr. James Chen', department: 'Neurology' },
-  { name: 'Dr. Sarah Thompson', department: 'Orthopedics' },
-];
-
-export default function BookingModal({ isOpen, onClose, initialDoctor, initialDepartment }) {
+export default function BookingModal({ isOpen, onClose, initialDoctor, initialDepartment, onSuccess }) {
+  const { token, user } = useContext(AuthContext);
   const [step, setStep] = useState(1);
+  const [departments, setDepartments] = useState([]);
+  const [doctors, setDoctors] = useState([]);
+  const [loadingData, setLoadingData] = useState(false);
+
   const [selectedDoctor, setSelectedDoctor] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
+  
   const [patientDetails, setPatientDetails] = useState({
     name: '',
     phone: '',
@@ -23,28 +24,63 @@ export default function BookingModal({ isOpen, onClose, initialDoctor, initialDe
 
   const [errors, setErrors] = useState({});
   const [bookingId, setBookingId] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
+  // Load departments and doctors list from backend when modal opens
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && token) {
       setStep(1);
-      setSelectedDoctor(initialDoctor || '');
-      setSelectedDepartment(initialDepartment || '');
+      setSelectedDoctor('');
+      setSelectedDepartment('');
       setSelectedDate('');
       setSelectedTime('');
       setPatientDetails({
-        name: '',
-        phone: '',
-        email: '',
+        name: user?.fullName || '',
+        phone: user?.phone || '',
+        email: user?.email || '',
         symptoms: '',
         hasInsurance: false,
       });
       setErrors({});
+
+      const fetchBookingData = async () => {
+        try {
+          setLoadingData(true);
+          const data = await appointmentService.getBookingData(token);
+          setDepartments(data.departments || []);
+          setDoctors(data.doctors || []);
+
+          // Pre-populate if initial props are provided
+          if (initialDepartment) {
+            const matchedDept = (data.departments || []).find(
+              d => d.DepartmentName.toLowerCase() === initialDepartment.toLowerCase()
+            );
+            if (matchedDept) {
+              setSelectedDepartment(matchedDept.id.toString());
+            }
+          }
+          if (initialDoctor) {
+            const matchedDoc = (data.doctors || []).find(
+              d => d.name.toLowerCase() === initialDoctor.toLowerCase()
+            );
+            if (matchedDoc) {
+              setSelectedDoctor(matchedDoc.id.toString());
+            }
+          }
+        } catch (err) {
+          console.error(err);
+        } finally {
+          setLoadingData(false);
+        }
+      };
+
+      fetchBookingData();
     }
-  }, [isOpen, initialDoctor, initialDepartment]);
+  }, [isOpen, token, user, initialDoctor, initialDepartment]);
 
   if (!isOpen) return null;
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     const errs = {};
     if (step === 1) {
       if (!selectedDepartment) errs.department = 'Please select a department.';
@@ -69,9 +105,25 @@ export default function BookingModal({ isOpen, onClose, initialDoctor, initialDe
 
     setErrors({});
     if (step === 3) {
-      const randomRef = 'HMS-' + Math.floor(100000 + Math.random() * 900000);
-      setBookingId(randomRef);
-      setStep(4);
+      try {
+        setSubmitting(true);
+        const result = await appointmentService.createAppointment(token, {
+          doctorId: selectedDoctor ? Number(selectedDoctor) : null,
+          departmentId: selectedDepartment ? Number(selectedDepartment) : null,
+          appointmentDate: selectedDate,
+          appointmentTime: selectedTime,
+          symptoms: patientDetails.symptoms,
+          hasInsurance: patientDetails.hasInsurance
+        });
+        
+        setBookingId('HMS-' + (result.appointment?.id || Math.floor(100000 + Math.random() * 900000)));
+        setStep(4);
+        if (onSuccess) onSuccess();
+      } catch (err) {
+        setErrors({ submit: err.message || 'Failed to submit appointment.' });
+      } finally {
+        setSubmitting(false);
+      }
     } else {
       setStep(step + 1);
     }
@@ -86,6 +138,10 @@ export default function BookingModal({ isOpen, onClose, initialDoctor, initialDe
 
   const timeSlots = ['08:30 AM', '09:30 AM', '10:30 AM', '11:30 AM', '02:00 PM', '03:00 PM', '04:00 PM'];
 
+  // Find names for receipt
+  const selectedDeptName = departments.find(d => d.id.toString() === selectedDepartment)?.DepartmentName || '';
+  const selectedDocName = doctors.find(d => d.id.toString() === selectedDoctor)?.name || '';
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-md">
       <div className="relative w-full max-w-lg bg-white dark:bg-slate-800 rounded-xl shadow-2xl overflow-hidden border border-outline-variant dark:border-slate-700 transition-colors duration-200">
@@ -96,7 +152,7 @@ export default function BookingModal({ isOpen, onClose, initialDoctor, initialDe
             <span className="material-symbols-outlined text-primary dark:text-primary-fixed-dim">
               event_available
             </span>
-            <h3 className="font-headline-md text-headline-md text-on-surface dark:text-white">
+            <h3 className="font-headline-md text-headline-md text-on-surface dark:text-white font-bold">
               Schedule Consultation
             </h3>
           </div>
@@ -115,7 +171,7 @@ export default function BookingModal({ isOpen, onClose, initialDoctor, initialDe
               <div key={num} className="flex items-center gap-xs">
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center text-body-sm font-semibold transition-all ${
                   step === num 
-                    ? 'bg-primary-container text-white scale-110' 
+                    ? 'bg-primary text-white scale-110' 
                     : step > num 
                       ? 'bg-green-500 text-white' 
                       : 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500'
@@ -125,7 +181,7 @@ export default function BookingModal({ isOpen, onClose, initialDoctor, initialDe
                   ) : num}
                 </div>
                 <span className={`text-[12px] font-medium hidden sm:inline ${
-                  step === num ? 'text-primary dark:text-primary-fixed-dim' : 'text-slate-400'
+                  step === num ? 'text-primary dark:text-primary-fixed-dim font-bold' : 'text-slate-400'
                 }`}>
                   {num === 1 ? 'Specialist' : num === 2 ? 'Schedule' : 'Details'}
                 </span>
@@ -139,62 +195,64 @@ export default function BookingModal({ isOpen, onClose, initialDoctor, initialDe
           
           {/* STEP 1: SELECT SPECIALIST & DEPT */}
           {step === 1 && (
-            <div className="space-y-md">
-              <div>
-                <label className="block font-label-md text-label-md text-on-surface dark:text-slate-300 mb-xs">
-                  Department
-                </label>
-                <select
-                  value={selectedDepartment}
-                  onChange={(e) => {
-                    setSelectedDepartment(e.target.value);
-                    setSelectedDoctor('');
-                    setErrors({ ...errors, department: '' });
-                  }}
-                  className="w-full p-sm bg-white dark:bg-slate-800 text-on-surface dark:text-white border border-outline-variant dark:border-slate-700 rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-                >
-                  <option value="">-- Choose Department --</option>
-                  <option value="Cardiology">Cardiology</option>
-                  <option value="Pediatrics">Pediatrics</option>
-                  <option value="Neurology">Neurology</option>
-                  <option value="Orthopedics">Orthopedics</option>
-                  <option value="Oncology">Oncology</option>
-                  <option value="Diagnostics">Diagnostics</option>
-                </select>
-                {errors.department && <p className="text-red-500 text-body-sm mt-xs">{errors.department}</p>}
-              </div>
+            <div className="space-y-md text-left">
+              {loadingData ? (
+                <div className="flex items-center justify-center py-xl">
+                  <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <label className="block font-label-md text-label-md text-on-surface dark:text-slate-300 mb-xs">
+                      Department
+                    </label>
+                    <select
+                      value={selectedDepartment}
+                      onChange={(e) => {
+                        setSelectedDepartment(e.target.value);
+                        setSelectedDoctor('');
+                        setErrors({ ...errors, department: '' });
+                      }}
+                      className="w-full p-sm bg-white dark:bg-slate-800 text-on-surface dark:text-white border border-outline-variant dark:border-slate-700 rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                    >
+                      <option value="">-- Choose Department --</option>
+                      {departments.map((dept) => (
+                        <option key={dept.id} value={dept.id}>{dept.DepartmentName}</option>
+                      ))}
+                    </select>
+                    {errors.department && <p className="text-red-500 text-body-sm mt-xs">{errors.department}</p>}
+                  </div>
 
-              <div>
-                <label className="block font-label-md text-label-md text-on-surface dark:text-slate-300 mb-xs">
-                  Available Specialists
-                </label>
-                <select
-                  value={selectedDoctor}
-                  onChange={(e) => {
-                    setSelectedDoctor(e.target.value);
-                    setErrors({ ...errors, doctor: '' });
-                  }}
-                  disabled={!selectedDepartment}
-                  className="w-full p-sm bg-white dark:bg-slate-800 text-on-surface dark:text-white border border-outline-variant dark:border-slate-700 rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all disabled:opacity-50"
-                >
-                  <option value="">-- Choose Specialist --</option>
-                  {doctorsData
-                    .filter((d) => d.department === selectedDepartment)
-                    .map((d, idx) => (
-                      <option key={idx} value={d.name}>{d.name}</option>
-                    ))}
-                  {selectedDepartment && doctorsData.filter((d) => d.department === selectedDepartment).length === 0 && (
-                    <option value="Duty Medical Specialist">Duty Medical Specialist ({selectedDepartment})</option>
-                  )}
-                </select>
-                {errors.doctor && <p className="text-red-500 text-body-sm mt-xs">{errors.doctor}</p>}
-              </div>
+                  <div>
+                    <label className="block font-label-md text-label-md text-on-surface dark:text-slate-300 mb-xs">
+                      Available Specialists
+                    </label>
+                    <select
+                      value={selectedDoctor}
+                      onChange={(e) => {
+                        setSelectedDoctor(e.target.value);
+                        setErrors({ ...errors, doctor: '' });
+                      }}
+                      disabled={!selectedDepartment}
+                      className="w-full p-sm bg-white dark:bg-slate-800 text-on-surface dark:text-white border border-outline-variant dark:border-slate-700 rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all disabled:opacity-50"
+                    >
+                      <option value="">-- Choose Specialist --</option>
+                      {doctors
+                        .filter((d) => d.departmentId?.toString() === selectedDepartment)
+                        .map((d) => (
+                          <option key={d.id} value={d.id}>{d.name}</option>
+                        ))}
+                    </select>
+                    {errors.doctor && <p className="text-red-500 text-body-sm mt-xs">{errors.doctor}</p>}
+                  </div>
+                </>
+              )}
             </div>
           )}
 
           {/* STEP 2: SELECT DATE & TIME */}
           {step === 2 && (
-            <div className="space-y-md">
+            <div className="space-y-md text-left">
               <div>
                 <label className="block font-label-md text-label-md text-on-surface dark:text-slate-300 mb-xs">
                   Consultation Date
@@ -227,7 +285,7 @@ export default function BookingModal({ isOpen, onClose, initialDoctor, initialDe
                       }}
                       className={`py-sm text-body-sm font-semibold rounded border transition-all duration-150 ${
                         selectedTime === slot
-                          ? 'bg-primary-container text-white border-transparent shadow'
+                          ? 'bg-primary text-white border-transparent shadow'
                           : 'bg-slate-50 dark:bg-slate-700 text-on-surface dark:text-slate-200 border-outline-variant dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-600'
                       }`}
                     >
@@ -242,7 +300,8 @@ export default function BookingModal({ isOpen, onClose, initialDoctor, initialDe
 
           {/* STEP 3: PATIENT INFORMATION */}
           {step === 3 && (
-            <div className="space-y-sm max-h-[350px] overflow-y-auto pr-xs">
+            <div className="space-y-sm max-h-[350px] overflow-y-auto pr-xs text-left">
+              {errors.submit && <div className="p-sm bg-red-100 text-red-700 rounded text-sm mb-sm">{errors.submit}</div>}
               <div>
                 <label className="block font-label-md text-label-md text-on-surface dark:text-slate-300 mb-xs">
                   Patient Full Name
@@ -314,7 +373,7 @@ export default function BookingModal({ isOpen, onClose, initialDoctor, initialDe
                   id="insurance-checkbox"
                   checked={patientDetails.hasInsurance}
                   onChange={(e) => setPatientDetails({ ...patientDetails, hasInsurance: e.target.checked })}
-                  className="rounded border-slate-300 text-primary-container focus:ring-primary w-4 h-4 cursor-pointer"
+                  className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4 cursor-pointer"
                 />
                 <label htmlFor="insurance-checkbox" className="font-body-md text-body-md text-on-surface-variant dark:text-slate-300 cursor-pointer select-none">
                   Billing via covered health insurance partner
@@ -329,7 +388,7 @@ export default function BookingModal({ isOpen, onClose, initialDoctor, initialDe
               <span className="material-symbols-outlined text-[64px] text-green-500 block animate-bounce">
                 check_circle
               </span>
-              <h4 className="font-headline-lg text-headline-lg text-on-surface dark:text-white">
+              <h4 className="font-headline-lg text-headline-lg text-on-surface dark:text-white font-bold">
                 Appointment Booked!
               </h4>
               <p className="font-body-md text-body-md text-on-surface-variant dark:text-slate-300 max-w-sm mx-auto">
@@ -348,11 +407,11 @@ export default function BookingModal({ isOpen, onClose, initialDoctor, initialDe
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">Doctor:</span>
-                  <span className="font-medium text-on-surface dark:text-slate-300">{selectedDoctor}</span>
+                  <span className="font-medium text-on-surface dark:text-slate-300">{selectedDocName}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">Dept:</span>
-                  <span className="font-medium text-on-surface dark:text-slate-300">{selectedDepartment}</span>
+                  <span className="font-medium text-on-surface dark:text-slate-300">{selectedDeptName}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">Schedule:</span>
@@ -374,8 +433,9 @@ export default function BookingModal({ isOpen, onClose, initialDoctor, initialDe
         <div className="flex justify-between p-lg border-t border-outline-variant dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
           {step > 1 && step < 4 ? (
             <button 
+              disabled={submitting}
               onClick={handleBackStep}
-              className="px-md py-sm border border-outline dark:border-slate-600 text-outline dark:text-slate-300 font-label-md text-label-md rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="px-md py-sm border border-outline dark:border-slate-600 text-outline dark:text-slate-300 font-label-md text-label-md rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
             >
               Back
             </button>
@@ -385,16 +445,23 @@ export default function BookingModal({ isOpen, onClose, initialDoctor, initialDe
 
           {step < 4 ? (
             <button 
+              disabled={submitting}
               onClick={handleNextStep}
-              className="px-xl py-sm bg-primary-container text-white font-label-md text-label-md rounded hover:bg-primary transition-all flex items-center gap-xs"
+              className="px-xl py-sm bg-primary text-white font-label-md text-label-md rounded hover:bg-primary-container transition-all flex items-center gap-xs disabled:opacity-50"
             >
-              {step === 3 ? 'Confirm Appointment' : 'Next'}
-              <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+              {submitting ? (
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              ) : step === 3 ? (
+                'Confirm Appointment'
+              ) : (
+                'Next'
+              )}
+              {!submitting && <span className="material-symbols-outlined text-[16px]">arrow_forward</span>}
             </button>
           ) : (
             <button 
               onClick={onClose}
-              className="w-full py-sm bg-primary-container text-white font-label-md text-label-md rounded hover:bg-primary transition-colors text-center"
+              className="w-full py-sm bg-primary text-white font-label-md text-label-md rounded hover:bg-primary-container transition-colors text-center"
             >
               Finish
             </button>

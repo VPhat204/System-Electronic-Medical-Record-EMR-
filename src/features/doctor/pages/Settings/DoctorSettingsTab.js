@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useContext, useState, useEffect, useRef } from 'react';
+import { AuthContext } from '../../../auth/context/AuthContext';
+import { ToastContext } from '../../../../shared/context/ToastContext';
 
 export default function DoctorSettingsTab({
   lang,
@@ -19,6 +21,131 @@ export default function DoctorSettingsTab({
   settingsDark,
   handleToggleDark,
 }) {
+  const { getUserProfile, updateUserProfile, updateUserSettings } = useContext(AuthContext);
+  const { success, error } = useContext(ToastContext);
+
+  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState(null);
+  const [lookups, setLookups] = useState({ departments: [], credentials: [], specializations: [], rooms: [] });
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Doctor Form states
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [dob, setDob] = useState('');
+  const [gender, setGender] = useState('male');
+  const [province, setProvince] = useState('');
+  const [district, setDistrict] = useState('');
+  const [ward, setWard] = useState('');
+  const [street, setStreet] = useState('');
+
+  // Doctor Profile fields
+  const [credentialId, setCredentialId] = useState('');
+  const [specializationId, setSpecializationId] = useState('');
+  const [departmentId, setDepartmentId] = useState('');
+  const [roomId, setRoomId] = useState('');
+  const [licenseNumber, setLicenseNumber] = useState('');
+  const [yearOfExperience, setYearOfExperience] = useState('');
+  const [biography, setBiography] = useState('');
+  const [consultationFee, setConsultationFee] = useState('');
+
+  const fileInputRef = useRef(null);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const data = await getUserProfile();
+      if (data) {
+        setProfile(data.user);
+        setLookups(data.lookups || { departments: [], credentials: [], specializations: [], rooms: [] });
+
+        setFullName(data.user.fullName || '');
+        setPhone(data.user.phone || '');
+        setDob(data.user.dob || '');
+        setGender(data.user.gender || 'male');
+        setProvince(data.user.province || '');
+        setDistrict(data.user.district || '');
+        setWard(data.user.ward || '');
+        setStreet(data.user.street || '');
+
+        const docProf = data.user.doctorProfile || {};
+        setCredentialId(docProf.credentialId || '');
+        setSpecializationId(docProf.specializationId || '');
+        setDepartmentId(docProf.departmentId || '');
+        setRoomId(docProf.roomId || '');
+        setLicenseNumber(docProf.licenseNumber || '');
+        setYearOfExperience(docProf.yearOfExperience || '');
+        setBiography(docProf.biography || '');
+        setConsultationFee(docProf.consultationFee || '');
+      }
+    } catch (err) {
+      error(lang === 'vi' ? 'Không thể tải thông tin profile.' : 'Failed to load profile details.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      await updateUserProfile({
+        fullName,
+        phone,
+        dob: dob || null,
+        gender,
+        province,
+        district,
+        ward,
+        street,
+        profileData: {
+          credentialId: credentialId ? Number(credentialId) : null,
+          specializationId: specializationId ? Number(specializationId) : null,
+          departmentId: departmentId ? Number(departmentId) : null,
+          roomId: roomId ? Number(roomId) : null,
+          licenseNumber,
+          yearOfExperience: yearOfExperience ? Number(yearOfExperience) : null,
+          biography,
+          consultationFee: consultationFee ? Number(consultationFee) : null
+        }
+      });
+      success(lang === 'vi' ? 'Cập nhật hồ sơ bác sĩ thành công!' : 'Physician profile updated successfully!');
+      setIsEditing(false);
+      await loadData();
+    } catch (err) {
+      error(err.message || (lang === 'vi' ? 'Cập nhật thất bại.' : 'Update failed.'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      error(lang === 'vi' ? 'Vui lòng chọn ảnh nhỏ hơn 2MB.' : 'Please select an image smaller than 2MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const base64String = reader.result;
+        await updateUserSettings({ avatar: base64String });
+        success(lang === 'vi' ? 'Cập nhật ảnh đại diện thành công!' : 'Avatar updated successfully!');
+        await loadData();
+      } catch (err) {
+        error(lang === 'vi' ? 'Cập nhật ảnh đại diện thất bại.' : 'Failed to update avatar.');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
     <>
       {/* Settings Header */}
@@ -70,74 +197,282 @@ export default function DoctorSettingsTab({
 
           {/* Pane Profile */}
           {settingsTab === 'profile' && (
-            <div className="space-y-gutter animate-in fade-in duration-200">
+            <div className="space-y-gutter animate-in fade-in duration-200 text-left">
+              {loading && !profile ? (
+                <div className="flex items-center justify-center p-xl min-h-[300px]">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+                </div>
+              ) : isEditing ? (
+                // ── DOCTOR PROFILE EDIT FORM ──
+                <form onSubmit={handleSave} className="bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 rounded-xl p-lg shadow-xs space-y-lg">
+                  <div className="flex items-center justify-between border-b border-outline-variant dark:border-slate-700 pb-md">
+                    <h3 className="text-headline-md font-bold text-primary dark:text-primary-fixed-dim">
+                      {lang === 'vi' ? 'Chỉnh Sửa Hồ Sơ Bác Sĩ' : 'Edit Physician Profile'}
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditing(false)}
+                      className="text-on-surface-variant dark:text-slate-400 font-label-md hover:underline"
+                    >
+                      {lang === 'vi' ? 'Hủy' : 'Cancel'}
+                    </button>
+                  </div>
 
-              {/* Personal physician card */}
-              <div className="bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 rounded-xl p-lg shadow-xs">
-                <div className="flex flex-col sm:flex-row items-start justify-between gap-md mb-lg">
-                  <div className="flex flex-col sm:flex-row gap-lg items-center text-center sm:text-left">
-                    <div className="relative group cursor-pointer">
-                      <img
-                        className="w-24 h-24 rounded-xl border border-outline-variant dark:border-slate-700 object-cover"
-                        alt="Dr. Julian Reed portrait"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAgDdkNPSPv2lbk-3io6wmPK00Xyx2_g2Ty273agQuBiThZ2vKscJ2S87oDY87aYlPiee1VNVtH8gmtafIGJtyPYDTA-eDCl9f_-mziOpUJ8OAihbnpOueSr-h8HCm1hdQI85szzkllnuoBLKTKt7h5cZ-_Hd05THVIk9R_XZdLVIdE47Ywuiby3srajUGQFNlAWoAqpWEUTlQF0wfptp26HR2VMhmxCuMuRo3LB3UgP9gRHT-99Y3k"
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-lg">
+                    {/* Basic info */}
+                    <div className="space-y-sm">
+                      <label className="text-label-md font-bold text-outline uppercase">{lang === 'vi' ? 'Họ và tên' : 'Full Name'}</label>
+                      <input
+                        type="text"
+                        required
+                        value={fullName}
+                        onChange={e => setFullName(e.target.value)}
+                        className="w-full px-md py-2 border border-outline-variant dark:border-slate-700 rounded bg-transparent text-on-surface dark:text-white"
                       />
-                      <div className="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <span className="material-symbols-outlined text-white">edit</span>
+                    </div>
+                    <div className="space-y-sm">
+                      <label className="text-label-md font-bold text-outline uppercase">{lang === 'vi' ? 'Số điện thoại' : 'Phone'}</label>
+                      <input
+                        type="text"
+                        value={phone}
+                        onChange={e => setPhone(e.target.value)}
+                        className="w-full px-md py-2 border border-outline-variant dark:border-slate-700 rounded bg-transparent text-on-surface dark:text-white"
+                      />
+                    </div>
+                    <div className="space-y-sm">
+                      <label className="text-label-md font-bold text-outline uppercase">{lang === 'vi' ? 'Ngày sinh' : 'Date of Birth'}</label>
+                      <input
+                        type="date"
+                        value={dob}
+                        onChange={e => setDob(e.target.value)}
+                        className="w-full px-md py-2 border border-outline-variant dark:border-slate-700 rounded bg-transparent text-on-surface dark:text-white"
+                      />
+                    </div>
+                    <div className="space-y-sm">
+                      <label className="text-label-md font-bold text-outline uppercase">{lang === 'vi' ? 'Giới tính' : 'Gender'}</label>
+                      <select
+                        value={gender}
+                        onChange={e => setGender(e.target.value)}
+                        className="w-full px-md py-2 border border-outline-variant dark:border-slate-700 rounded bg-transparent text-on-surface dark:text-white dark:bg-slate-800"
+                      >
+                        <option value="male">{lang === 'vi' ? 'Nam' : 'Male'}</option>
+                        <option value="female">{lang === 'vi' ? 'Nữ' : 'Female'}</option>
+                      </select>
+                    </div>
+
+                    {/* Doctor specific */}
+                    <div className="space-y-sm">
+                      <label className="text-label-md font-bold text-outline uppercase">{lang === 'vi' ? 'Số giấy phép hành nghề' : 'License Number'}</label>
+                      <input
+                        type="text"
+                        value={licenseNumber}
+                        onChange={e => setLicenseNumber(e.target.value)}
+                        className="w-full px-md py-2 border border-outline-variant dark:border-slate-700 rounded bg-transparent text-on-surface dark:text-white"
+                      />
+                    </div>
+                    <div className="space-y-sm">
+                      <label className="text-label-md font-bold text-outline uppercase">{lang === 'vi' ? 'Số năm kinh nghiệm' : 'Years of Experience'}</label>
+                      <input
+                        type="number"
+                        value={yearOfExperience}
+                        onChange={e => setYearOfExperience(e.target.value)}
+                        className="w-full px-md py-2 border border-outline-variant dark:border-slate-700 rounded bg-transparent text-on-surface dark:text-white"
+                      />
+                    </div>
+                    <div className="space-y-sm">
+                      <label className="text-label-md font-bold text-outline uppercase">{lang === 'vi' ? 'Học vị / Học hàm' : 'Credentials / Academic Title'}</label>
+                      <select
+                        value={credentialId}
+                        onChange={e => setCredentialId(e.target.value)}
+                        className="w-full px-md py-2 border border-outline-variant dark:border-slate-700 rounded bg-transparent text-on-surface dark:text-white dark:bg-slate-800"
+                      >
+                        <option value="">{lang === 'vi' ? '-- Chọn chức danh --' : '-- Select credential --'}</option>
+                        {lookups.credentials.map(c => (
+                          <option key={c.id} value={c.id}>{c.CredentialName}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-sm">
+                      <label className="text-label-md font-bold text-outline uppercase">{lang === 'vi' ? 'Chuyên khoa sâu' : 'Specialization'}</label>
+                      <select
+                        value={specializationId}
+                        onChange={e => setSpecializationId(e.target.value)}
+                        className="w-full px-md py-2 border border-outline-variant dark:border-slate-700 rounded bg-transparent text-on-surface dark:text-white dark:bg-slate-800"
+                      >
+                        <option value="">{lang === 'vi' ? '-- Chọn chuyên khoa --' : '-- Select specialty --'}</option>
+                        {lookups.specializations.map(s => (
+                          <option key={s.id} value={s.id}>{s.SpecializationName}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-sm">
+                      <label className="text-label-md font-bold text-outline uppercase">{lang === 'vi' ? 'Khoa công tác' : 'Department'}</label>
+                      <select
+                        value={departmentId}
+                        onChange={e => setDepartmentId(e.target.value)}
+                        className="w-full px-md py-2 border border-outline-variant dark:border-slate-700 rounded bg-transparent text-on-surface dark:text-white dark:bg-slate-800"
+                      >
+                        <option value="">{lang === 'vi' ? '-- Chọn khoa --' : '-- Select department --'}</option>
+                        {lookups.departments.map(d => (
+                          <option key={d.id} value={d.id}>{d.DepartmentName}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-sm">
+                      <label className="text-label-md font-bold text-outline uppercase">{lang === 'vi' ? 'Phòng khám bệnh' : 'Room Location'}</label>
+                      <select
+                        value={roomId}
+                        onChange={e => setRoomId(e.target.value)}
+                        className="w-full px-md py-2 border border-outline-variant dark:border-slate-700 rounded bg-transparent text-on-surface dark:text-white dark:bg-slate-800"
+                      >
+                        <option value="">{lang === 'vi' ? '-- Chọn phòng khám --' : '-- Select room --'}</option>
+                        {lookups.rooms.map(r => (
+                          <option key={r.id} value={r.id}>{r.RoomName} ({r.RoomCode})</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-sm">
+                      <label className="text-label-md font-bold text-outline uppercase">{lang === 'vi' ? 'Phí tư vấn / khám (VND)' : 'Consultation Fee (VND)'}</label>
+                      <input
+                        type="number"
+                        value={consultationFee}
+                        onChange={e => setConsultationFee(e.target.value)}
+                        className="w-full px-md py-2 border border-outline-variant dark:border-slate-700 rounded bg-transparent text-on-surface dark:text-white"
+                      />
+                    </div>
+                    <div className="sm:col-span-2 space-y-sm">
+                      <label className="text-label-md font-bold text-outline uppercase">{lang === 'vi' ? 'Tiểu sử tóm tắt' : 'Professional Biography'}</label>
+                      <textarea
+                        rows={3}
+                        value={biography}
+                        onChange={e => setBiography(e.target.value)}
+                        className="w-full px-md py-2 border border-outline-variant dark:border-slate-700 rounded bg-transparent text-on-surface dark:text-white resize-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-md pt-md border-t border-outline-variant dark:border-slate-700">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditing(false)}
+                      className="px-lg py-2 border border-outline rounded-lg text-on-surface dark:text-slate-300 font-label-md"
+                    >
+                      {lang === 'vi' ? 'Hủy' : 'Cancel'}
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-lg py-2 bg-primary text-white font-label-md rounded-lg hover:bg-primary-hover shadow-sm"
+                    >
+                      {lang === 'vi' ? 'Lưu hồ sơ' : 'Save Changes'}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                // ── DOCTOR PROFILE VIEW MODE ──
+                <div className="bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 rounded-xl p-lg shadow-xs">
+                  <div className="flex flex-col sm:flex-row items-start justify-between gap-md mb-lg">
+                    <div className="flex flex-col sm:flex-row gap-lg items-center text-center sm:text-left">
+                      <div onClick={() => fileInputRef.current.click()} className="relative group cursor-pointer shrink-0">
+                        <input type="file" ref={fileInputRef} onChange={handleAvatarChange} className="hidden" accept="image/*" />
+                        <img
+                          className="w-24 h-24 rounded-xl border border-outline-variant dark:border-slate-700 object-cover"
+                          alt="Physician portrait"
+                          src={profile?.avatar ? (profile.avatar.startsWith('http') || profile.avatar.startsWith('data:image') ? profile.avatar : `http://localhost:5000${profile.avatar}`) : 'https://lh3.googleusercontent.com/aida-public/AB6AXuCwo2C_dk0HpwFKTj4wKewVviyYkbYQz5hKgbX0B5qb1THrUqzrllVUp6S-j8Nn52jKu4IIwDQWg-NdtbXP7V79F1o5L2JTynJImEjQqz8Doz18ihOvxIC4p6ndawaKQEle39nuMPJF1L67lIl-qIGkeq3-hJ8E8BzNA22t5MIzXvflazLoE7oYn0kUXqcF2EBwMYySIVeubwZPGv0sBbqd84GImY1wLXJUxjNEux-FRl0uMMGv3zjx'}
+                        />
+                        <div className="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span className="material-symbols-outlined text-white">photo_camera</span>
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="text-headline-md font-headline-md text-on-surface dark:text-white">
+                          {profile?.fullName || 'Julian Reed'}
+                        </h3>
+                        <p className="text-body-md text-on-surface-variant dark:text-slate-400">
+                          {lang === 'vi' ? 'Số giấy phép: ' : 'License: '} {licenseNumber || '#N/A'}
+                        </p>
+                        <span className="inline-block mt-sm bg-primary-fixed text-primary dark:text-teal-900 px-sm py-xs rounded text-body-sm font-bold border border-primary/10">
+                          {profile?.doctorProfile?.credential?.CredentialName || (lang === 'vi' ? 'Bác sĩ trực' : 'Attending Physician')}
+                        </span>
                       </div>
                     </div>
-                    <div>
-                      <h3 className="text-headline-md font-headline-md text-on-surface dark:text-white">Dr. Julian Reed</h3>
-                      <p className="text-body-md text-on-surface-variant dark:text-slate-400">License: #MD-80419-RE</p>
-                      <span className="inline-block mt-sm bg-primary-fixed text-primary dark:text-teal-900 px-sm py-xs rounded text-body-sm font-bold border border-primary/10">
-                        Attending Physician
-                      </span>
+
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="border border-primary dark:border-primary-fixed-dim text-primary dark:text-primary-fixed-dim px-md py-sm rounded font-label-md text-label-md hover:bg-primary-fixed/20 transition-colors w-full sm:w-auto"
+                    >
+                      {lang === 'vi' ? 'Chỉnh sửa Profile' : 'Edit Profile'}
+                    </button>
+                  </div>
+
+                  {/* Fields details */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-lg pt-lg border-t border-outline-variant dark:border-slate-700">
+                    <div className="space-y-base">
+                      <label className="text-label-md font-bold text-outline dark:text-slate-400 uppercase tracking-wider block">
+                        {lang === 'vi' ? 'Họ và tên bác sĩ' : 'Full Legal Name'}
+                      </label>
+                      <p className="text-body-md font-medium px-md py-sm bg-slate-50 dark:bg-slate-900 rounded border border-outline-variant dark:border-slate-700 text-on-surface dark:text-slate-200">
+                        {profile?.fullName}
+                      </p>
+                    </div>
+
+                    <div className="space-y-base">
+                      <label className="text-label-md font-bold text-outline dark:text-slate-400 uppercase tracking-wider block">
+                        {lang === 'vi' ? 'Hộp thư Email' : 'Primary Email'}
+                      </label>
+                      <p className="text-body-md font-medium px-md py-sm bg-slate-50 dark:bg-slate-900 rounded border border-outline-variant dark:border-slate-700 text-on-surface dark:text-slate-200">
+                        {profile?.email}
+                      </p>
+                    </div>
+
+                    <div className="space-y-base">
+                      <label className="text-label-md font-bold text-outline dark:text-slate-400 uppercase tracking-wider block">
+                        {lang === 'vi' ? 'Chuyên khoa' : 'Specialty'}
+                      </label>
+                      <p className="text-body-md font-medium px-md py-sm bg-slate-50 dark:bg-slate-900 rounded border border-outline-variant dark:border-slate-700 text-on-surface dark:text-slate-200">
+                        {profile?.doctorProfile?.specialization?.SpecializationName || (lang === 'vi' ? 'Chưa cập nhật' : 'Not set')}
+                      </p>
+                    </div>
+
+                    <div className="space-y-base">
+                      <label className="text-label-md font-bold text-outline dark:text-slate-400 uppercase tracking-wider block">
+                        {lang === 'vi' ? 'Khoa công tác & Phòng khám' : 'Department & Room'}
+                      </label>
+                      <p className="text-body-md font-medium px-md py-sm bg-slate-50 dark:bg-slate-900 rounded border border-outline-variant dark:border-slate-700 text-on-surface dark:text-slate-200">
+                        {profile?.doctorProfile?.department?.DepartmentName || 'N/A'} - {profile?.doctorProfile?.room?.RoomName || 'N/A'}
+                      </p>
+                    </div>
+
+                    <div className="space-y-base">
+                      <label className="text-label-md font-bold text-outline dark:text-slate-400 uppercase tracking-wider block">
+                        {lang === 'vi' ? 'Số năm kinh nghiệm' : 'Years of Experience'}
+                      </label>
+                      <p className="text-body-md font-medium px-md py-sm bg-slate-50 dark:bg-slate-900 rounded border border-outline-variant dark:border-slate-700 text-on-surface dark:text-slate-200">
+                        {yearOfExperience ? `${yearOfExperience} ` + (lang === 'vi' ? 'năm kinh nghiệm' : 'years') : 'N/A'}
+                      </p>
+                    </div>
+
+                    <div className="space-y-base">
+                      <label className="text-label-md font-bold text-outline dark:text-slate-400 uppercase tracking-wider block">
+                        {lang === 'vi' ? 'Phí tư vấn' : 'Consultation Fee'}
+                      </label>
+                      <p className="text-body-md font-medium px-md py-sm bg-slate-50 dark:bg-slate-900 rounded border border-outline-variant dark:border-slate-700 text-on-surface dark:text-slate-200 font-data-mono">
+                        {consultationFee ? Number(consultationFee).toLocaleString() + ' VND' : 'N/A'}
+                      </p>
+                    </div>
+
+                    <div className="sm:col-span-2 space-y-base">
+                      <label className="text-label-md font-bold text-outline dark:text-slate-400 uppercase tracking-wider block">
+                        {lang === 'vi' ? 'Tiểu sử tóm tắt' : 'Professional Biography'}
+                      </label>
+                      <p className="text-body-md font-medium px-md py-sm bg-slate-50 dark:bg-slate-900 rounded border border-outline-variant dark:border-slate-700 text-on-surface dark:text-slate-200 leading-relaxed whitespace-pre-line">
+                        {biography || (lang === 'vi' ? 'Chưa cập nhật tiểu sử' : 'No biography added yet.')}
+                      </p>
                     </div>
                   </div>
-
-                  <button
-                    onClick={() => alert('Sửa thông tin tài khoản')}
-                    className="border border-primary dark:border-primary-fixed-dim text-primary dark:text-primary-fixed-dim px-md py-sm rounded font-label-md text-label-md hover:bg-primary-fixed/20 transition-colors w-full sm:w-auto"
-                  >
-                    Edit Profile
-                  </button>
                 </div>
+              )}
 
-                {/* Fields details */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-lg pt-lg border-t border-outline-variant dark:border-slate-700">
-                  <div className="space-y-base">
-                    <label className="text-label-md font-bold text-outline dark:text-slate-400 uppercase tracking-wider block">Full Legal Name</label>
-                    <p className="text-body-md font-medium px-md py-sm bg-slate-50 dark:bg-slate-900 rounded border border-outline-variant dark:border-slate-700 text-on-surface dark:text-slate-200">
-                      Julian Reed, MD
-                    </p>
-                  </div>
-
-                  <div className="space-y-base">
-                    <label className="text-label-md font-bold text-outline dark:text-slate-400 uppercase tracking-wider block">Primary Email</label>
-                    <p className="text-body-md font-medium px-md py-sm bg-slate-50 dark:bg-slate-900 rounded border border-outline-variant dark:border-slate-700 text-on-surface dark:text-slate-200">
-                      j.reed@medcore.emr
-                    </p>
-                  </div>
-
-                  <div className="space-y-base">
-                    <label className="text-label-md font-bold text-outline dark:text-slate-400 uppercase tracking-wider block">Specialty</label>
-                    <p className="text-body-md font-medium px-md py-sm bg-slate-50 dark:bg-slate-900 rounded border border-outline-variant dark:border-slate-700 text-on-surface dark:text-slate-200">
-                      Cardiology & Electrophysiology
-                    </p>
-                  </div>
-
-                  <div className="space-y-base">
-                    <label className="text-label-md font-bold text-outline dark:text-slate-400 uppercase tracking-wider block">Department</label>
-                    <p className="text-body-md font-medium px-md py-sm bg-slate-50 dark:bg-slate-900 rounded border border-outline-variant dark:border-slate-700 text-on-surface dark:text-slate-200">
-                      Cardiac ICU Wing
-                    </p>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Preferences Toggles */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-gutter">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-gutter mt-lg">
 
                 {/* Appearance Block */}
                 <div className="bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 rounded-xl p-lg shadow-xs">

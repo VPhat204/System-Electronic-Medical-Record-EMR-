@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import UserProfileTab from '../../../../shared/components/UserProfileTab';
 
 export default function NurseSettingsTab({
   lang,
@@ -13,10 +14,13 @@ export default function NurseSettingsTab({
   sessionTimeout,
   setSessionTimeout
 }) {
+  const [activeSubTab, setActiveSubTab] = useState('profile');
+
   const settingsText = {
     vi: {
-      title: 'Hệ thống Cài đặt',
-      subtitle: 'Quản lý cấu hình lâm sàng, bảo mật và tùy chọn hiển thị cho hệ thống MedCore.',
+      title: 'Thiết Lập & Hồ Sơ Điều Dưỡng',
+      subtitle: 'Quản lý thông tin chứng chỉ điều dưỡng và các tùy chỉnh hệ thống lâm sàng.',
+      profileTab: 'Hồ sơ cá nhân',
       cancel: 'Hủy bỏ',
       save: 'Lưu thay đổi',
       facilityTitle: 'Thông tin Cơ sở',
@@ -40,8 +44,9 @@ export default function NurseSettingsTab({
       cancelledMsg: 'Đã hủy bỏ các thay đổi cài đặt!'
     },
     en: {
-      title: 'System Settings',
-      subtitle: 'Manage clinical configuration, security, and display options for the MedCore system.',
+      title: 'Nurse Settings & Profile',
+      subtitle: 'Manage nurse credentials and clinical settings preferences.',
+      profileTab: 'Personal Profile',
       cancel: 'Cancel',
       save: 'Save changes',
       facilityTitle: 'Facility Information',
@@ -64,7 +69,7 @@ export default function NurseSettingsTab({
       savedMsg: 'System settings saved successfully!',
       cancelledMsg: 'Settings changes discarded!'
     }
-  }[lang];
+  }[lang || 'vi'];
 
   return (
     <div className="space-y-lg text-left">
@@ -78,179 +83,110 @@ export default function NurseSettingsTab({
             {settingsText.subtitle}
           </p>
         </div>
-        <div className="flex gap-md shrink-0 w-full md:w-auto">
-          <button 
-            type="button"
-            onClick={() => {
-              setHospitalName('Bệnh viện Đa khoa MedCore');
-              setHospitalAddress('123 Đường Sức Khỏe, Quận 1, TP. Hồ Chí Minh');
-              setIs2faEnabled(true);
-              setSessionTimeout('30 phút');
-              alert(settingsText.cancelledMsg);
-            }}
-            className="flex-1 md:flex-none px-xl py-2 border border-outline dark:border-slate-700 text-on-surface-variant dark:text-slate-300 font-label-md rounded-lg bg-transparent hover:bg-surface-container-high dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer"
-          >
-            {settingsText.cancel}
-          </button>
-          <button 
-            type="button"
-            onClick={() => alert(settingsText.savedMsg)}
-            className="flex-1 md:flex-none px-xl py-2 bg-primary dark:bg-primary-container text-white dark:text-on-primary-container font-label-md rounded-lg shadow-sm hover:bg-primary/90 active:scale-95 transition-all cursor-pointer"
-          >
-            {settingsText.save}
-          </button>
-        </div>
       </div>
 
-      <div className="space-y-xl">
-        {/* Facility Information Section */}
-        <section className="bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-2xl p-xl shadow-sm transition-colors">
-          <div className="flex items-center gap-sm mb-lg border-b border-surface-container dark:border-slate-800 pb-md">
-            <div className="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary-container/20 flex items-center justify-center">
-              <span className="material-symbols-outlined text-primary dark:text-primary-fixed-dim">domain</span>
-            </div>
-            <div>
-              <h3 className="font-headline-md text-headline-md font-bold text-on-surface dark:text-white">
-                {settingsText.facilityTitle}
-              </h3>
-              <p className="text-body-sm text-on-surface-variant dark:text-slate-400">
-                {settingsText.facilityDesc}
-              </p>
-            </div>
-          </div>
-          
-          <div className="space-y-xl">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-xl">
-              <div className="space-y-sm">
-                <label className="block font-label-md text-on-surface-variant dark:text-slate-400">{settingsText.facilityName}</label>
-                <input 
-                  type="text" 
-                  value={hospitalName}
-                  onChange={(e) => setHospitalName(e.target.value)}
-                  className="w-full px-md py-sm border border-outline-variant dark:border-slate-800 rounded-lg bg-surface-container-lowest dark:bg-slate-950 text-on-surface dark:text-white text-body-md outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                />
-              </div>
-              <div className="space-y-sm">
-                <label className="block font-label-md text-on-surface-variant dark:text-slate-400">{settingsText.facilityId}</label>
-                <div className="flex items-center gap-sm px-md py-sm border border-outline-variant dark:border-slate-800 rounded-lg bg-surface-container-low dark:bg-slate-850 text-on-surface-variant dark:text-slate-400 italic cursor-not-allowed select-none">
-                  <span className="material-symbols-outlined text-sm">lock</span>
-                  <span className="text-body-md">HMS-VN-10293</span>
-                </div>
-              </div>
-            </div>
-            <div className="space-y-sm">
-              <label className="block font-label-md text-on-surface-variant dark:text-slate-400">{settingsText.address}</label>
-              <textarea 
-                rows="3"
-                value={hospitalAddress}
-                onChange={(e) => setHospitalAddress(e.target.value)}
-                className="w-full px-md py-sm border border-outline-variant dark:border-slate-800 rounded-lg bg-surface-container-lowest dark:bg-slate-950 text-on-surface dark:text-white text-body-md outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all min-h-[100px]"
-              />
-            </div>
-          </div>
-        </section>
+      {/* Sub-tabs horizontal switcher */}
+      <div className="flex border-b border-outline-variant dark:border-slate-800 gap-md">
+        {[
+          { id: 'profile', label: settingsText.profileTab, icon: 'person' },
+          { id: 'facility', label: settingsText.facilityTitle, icon: 'domain' },
+          { id: 'security', label: settingsText.securityTitle, icon: 'security' },
+          { id: 'notifications', label: settingsText.notificationsTitle, icon: 'notifications_active' }
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveSubTab(tab.id)}
+            className={`flex items-center gap-xs px-md py-3 font-label-md text-label-md border-b-2 bg-transparent cursor-pointer transition-all outline-none ${
+              activeSubTab === tab.id
+                ? 'border-primary text-primary dark:text-primary-fixed-dim font-bold'
+                : 'border-transparent text-on-surface-variant dark:text-slate-400 hover:text-on-surface'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[18px]">{tab.icon}</span>
+            <span>{tab.label}</span>
+          </button>
+        ))}
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-xl">
-          {/* Security Section */}
-          <section className="bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-2xl p-xl shadow-sm transition-colors h-full flex flex-col justify-between">
-            <div>
+      <div className="pb-xl">
+        {activeSubTab === 'profile' && (
+          <div className="animate-in fade-in duration-200">
+            <UserProfileTab lang={lang} />
+          </div>
+        )}
+
+        {activeSubTab === 'facility' && (
+          <div className="space-y-xl animate-in fade-in duration-200">
+            <section className="bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-2xl p-xl shadow-sm">
               <div className="flex items-center gap-sm mb-lg border-b border-surface-container dark:border-slate-800 pb-md">
                 <div className="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary-container/20 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-primary dark:text-primary-fixed-dim">verified_user</span>
+                  <span className="material-symbols-outlined text-primary dark:text-primary-fixed-dim">domain</span>
                 </div>
                 <div>
                   <h3 className="font-headline-md text-headline-md font-bold text-on-surface dark:text-white">
-                    {settingsText.securityTitle}
+                    {settingsText.facilityTitle}
                   </h3>
                   <p className="text-body-sm text-on-surface-variant dark:text-slate-400">
-                    {settingsText.securityDesc}
+                    {settingsText.facilityDesc}
                   </p>
                 </div>
               </div>
-              <div className="space-y-lg divide-y divide-surface-container dark:divide-slate-800">
-                <div className="flex items-center justify-between py-md first:pt-0">
-                  <div>
-                    <p className="font-label-md text-on-surface dark:text-white">{settingsText.twoFactor}</p>
-                    <p className="text-body-sm text-on-surface-variant dark:text-slate-400">{settingsText.twoFactorDesc}</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer group">
+              <div className="space-y-xl">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-xl">
+                  <div className="space-y-sm">
+                    <label className="block font-label-md text-on-surface-variant dark:text-slate-400">{settingsText.facilityName}</label>
                     <input 
-                      type="checkbox" 
-                      checked={is2faEnabled}
-                      onChange={(e) => setIs2faEnabled(e.target.checked)}
-                      className="sr-only peer" 
+                      type="text" 
+                      value={hospitalName}
+                      onChange={(e) => setHospitalName(e.target.value)}
+                      className="w-full px-md py-sm border border-outline-variant dark:border-slate-800 rounded-lg bg-surface-container-lowest dark:bg-slate-950 text-on-surface dark:text-white outline-none"
                     />
-                    <div className="w-12 h-6 bg-surface-container-high dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-6 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary dark:peer-checked:bg-primary-container shadow-inner"></div>
-                  </label>
-                </div>
-                <div className="flex items-center justify-between py-md">
-                  <div>
-                    <p className="font-label-md text-on-surface dark:text-white">{settingsText.sessionTimeout}</p>
-                    <p className="text-body-sm text-on-surface-variant dark:text-slate-400">{settingsText.sessionTimeoutDesc}</p>
                   </div>
-                  <select 
-                    value={sessionTimeout}
-                    onChange={(e) => setSessionTimeout(e.target.value)}
-                    className="px-md py-sm border border-outline-variant dark:border-slate-800 rounded-lg bg-surface-container-lowest dark:bg-slate-950 text-on-surface dark:text-white text-body-md outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
-                  >
-                    <option value="30 phút">{lang === 'vi' ? '30 phút' : '30 minutes'}</option>
-                    <option value="1 giờ">{lang === 'vi' ? '1 giờ' : '1 hour'}</option>
-                    <option value="8 giờ">{lang === 'vi' ? '8 giờ' : '8 hours'}</option>
-                  </select>
+                  <div className="space-y-sm">
+                    <label className="block font-label-md text-on-surface-variant dark:text-slate-400">{settingsText.facilityId}</label>
+                    <div className="flex items-center gap-sm px-md py-sm border border-outline-variant dark:border-slate-800 rounded-lg bg-surface-container-low dark:text-slate-400 italic">
+                      <span className="material-symbols-outlined text-sm">lock</span>
+                      <span className="text-body-md">HMS-VN-10293</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-sm">
+                  <label className="block font-label-md text-on-surface-variant dark:text-slate-400">{settingsText.address}</label>
+                  <textarea 
+                    rows="3"
+                    value={hospitalAddress}
+                    onChange={(e) => setHospitalAddress(e.target.value)}
+                    className="w-full px-md py-sm border border-outline-variant dark:border-slate-800 rounded-lg bg-surface-container-lowest dark:bg-slate-950 text-on-surface dark:text-white outline-none min-h-[100px]"
+                  />
                 </div>
               </div>
-            </div>
-            <div className="pt-md mt-md">
-              <button 
-                type="button"
-                onClick={() => alert(lang === 'vi' ? 'Đang chuyển tới trang đổi mật khẩu...' : 'Redirecting to password reset page...')}
-                className="w-full py-sm border border-primary dark:border-primary-fixed-dim text-primary dark:text-primary-fixed-dim font-label-md rounded-lg hover:bg-primary/5 dark:hover:bg-primary-container/10 transition-colors bg-transparent cursor-pointer font-bold text-xs"
-              >
-                {settingsText.changePassword}
-              </button>
-            </div>
-          </section>
+            </section>
+          </div>
+        )}
 
-          {/* Notifications Summary Section */}
-          <section className="bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-2xl p-xl shadow-sm transition-colors">
-            <div className="flex items-center gap-sm mb-lg border-b border-surface-container dark:border-slate-800 pb-md">
-              <div className="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary-container/20 flex items-center justify-center">
-                <span className="material-symbols-outlined text-primary dark:text-primary-fixed-dim">notifications_active</span>
-              </div>
-              <div>
-                <h3 className="font-headline-md text-headline-md font-bold text-on-surface dark:text-white">
-                  {settingsText.notificationsTitle}
-                </h3>
-                <p className="text-body-sm text-on-surface-variant dark:text-slate-400">
-                  {settingsText.notificationsDesc}
-                </p>
-              </div>
-            </div>
-            <div className="space-y-md">
-              <div className="flex items-center justify-between">
-                <span className="text-body-md font-medium text-on-surface dark:text-white">{settingsText.newAppointment}</span>
-                <div className="flex gap-sm">
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary-fixed dark:bg-primary-container text-on-primary-fixed dark:text-primary-fixed-dim">EMAIL</span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-secondary-container dark:bg-teal-955 text-on-secondary-container dark:text-teal-400">APP</span>
+        {activeSubTab === 'security' && (
+          <div className="space-y-xl animate-in fade-in duration-200">
+            <section className="bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-2xl p-xl shadow-sm">
+              <h3 className="font-headline-md font-bold text-on-surface dark:text-white mb-lg">{settingsText.securityTitle}</h3>
+              <div className="flex flex-col sm:flex-row justify-between items-center p-md bg-surface-container-low dark:bg-slate-950 rounded-xl border border-outline-variant dark:border-slate-800 gap-md">
+                <div>
+                  <p className="font-bold text-on-surface dark:text-white">{settingsText.twoFactor}</p>
+                  <p className="text-xs text-outline">{settingsText.twoFactorDesc}</p>
                 </div>
+                <button onClick={() => setIs2faEnabled(!is2faEnabled)} className="px-md py-1.5 border rounded-lg bg-transparent text-primary dark:text-primary-fixed-dim">{is2faEnabled ? 'DISABLE' : 'ENABLE'}</button>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-body-md font-medium text-on-surface dark:text-white">{settingsText.labResults}</span>
-                <div className="flex gap-sm">
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary-fixed dark:bg-primary-container text-on-primary-fixed dark:text-primary-fixed-dim">EMAIL</span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-tertiary-fixed dark:bg-amber-900 text-on-tertiary-fixed dark:text-amber-400">SMS</span>
-                </div>
-              </div>
-              <button 
-                type="button"
-                onClick={() => alert(lang === 'vi' ? 'Đang mở tùy chọn thông báo...' : 'Opening notification preferences...')}
-                className="w-full text-center text-primary dark:text-primary-fixed-dim font-bold text-xs mt-sm hover:underline border-none bg-transparent cursor-pointer"
-              >
-                {settingsText.manageNotifications}
-              </button>
-            </div>
-          </section>
-        </div>
+            </section>
+          </div>
+        )}
+
+        {activeSubTab === 'notifications' && (
+          <div className="space-y-xl animate-in fade-in duration-200">
+            <section className="bg-white dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-2xl p-xl shadow-sm text-center">
+              <span className="material-symbols-outlined text-[48px] text-outline">notifications_off</span>
+              <p className="text-body-md text-outline mt-md">{settingsText.notificationsDesc}</p>
+            </section>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 export default function ReceptionistAppointmentsTab({
   lang,
@@ -12,6 +12,8 @@ export default function ReceptionistAppointmentsTab({
   appointments,
   visibleAppointments,
   handleToggleApptStatus,
+  handleConfirmAppt,
+  handleCheckInAppt,
   calculateTopOffset,
   apptWaiting,
   apptInRoom,
@@ -22,6 +24,7 @@ export default function ReceptionistAppointmentsTab({
   handleToggleDoctorStatus,
   handleBookingConfirmSubmit,
 }) {
+  const [openMenuId, setOpenMenuId] = useState(null);
   const isDark = document.documentElement.classList.contains('dark');
 
   return (
@@ -130,55 +133,154 @@ export default function ReceptionistAppointmentsTab({
                   >
                     {visibleAppointments.length > 0 ? (
                       visibleAppointments.map(appt => {
-                        const isCheck = appt.status === 'Đã check-in';
-                        const isWait = appt.status === 'Đang chờ';
-                        const isPri = appt.status === 'Ưu tiên';
+                        const isPending = appt.rawStatus === 'PENDING';
+                        const isConfirmed = appt.rawStatus === 'CONFIRMED';
+                        const isCheckedIn = appt.rawStatus === 'CHECKED_IN';
+                        const isInProgress = appt.rawStatus === 'IN_PROGRESS';
+                        const isCompleted = appt.rawStatus === 'COMPLETED';
+                        const isCancelled = appt.rawStatus === 'CANCELLED';
+
+                        const isMenuOpen = openMenuId === appt.id;
 
                         return (
                           <div
                             key={appt.id}
-                            onClick={() => handleToggleApptStatus(appt.id)}
-                            className={`absolute left-4 right-4 p-sm rounded-lg border flex justify-between items-start hover:shadow-md hover:translate-y-[-1px] active:scale-[0.99] transition-all cursor-pointer group select-none border-l-[6px] ${isCheck
-                              ? 'bg-primary-container/10 dark:bg-blue-950/20 border-primary text-primary dark:text-primary-fixed-dim'
-                              : isWait
-                                ? 'bg-amber-500/5 dark:bg-amber-950/10 border-amber-500 text-amber-800 dark:text-amber-300 hover:border-amber-600'
-                                : isPri
-                                  ? 'bg-error-container/10 dark:bg-red-950/20 border-error text-error'
-                                  : 'bg-green-500/5 dark:bg-green-950/10 border-green-500 text-green-700 dark:text-green-300 opacity-70 hover:opacity-100'
-                              }`}
-                            style={{ top: calculateTopOffset(appt.time), height: `${Math.max(60, (appt.durationMins || 45) / 60 * 80)}px` }}
-                            title={lang === 'vi' ? 'Nhấp để đổi trạng thái lịch hẹn' : 'Click to cycle appointment status'}
+                            className={`absolute left-3 right-3 rounded-xl border bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all duration-200 select-none p-3 border-l-4 flex flex-col justify-between ${
+                              isCheckedIn
+                                ? 'border-l-teal-500 border-teal-200 dark:border-teal-800/60'
+                                : isPending
+                                  ? 'border-l-amber-500 border-amber-200 dark:border-amber-800/60'
+                                  : isConfirmed
+                                    ? 'border-l-blue-500 border-blue-200 dark:border-blue-800/60'
+                                    : isInProgress
+                                      ? 'border-l-orange-500 border-orange-200 dark:border-orange-800/60'
+                                      : isCancelled
+                                        ? 'border-l-slate-400 border-slate-200 dark:border-slate-700 opacity-60'
+                                        : 'border-l-emerald-500 border-emerald-200 dark:border-emerald-800/60'
+                            }`}
+                            style={{ top: calculateTopOffset(appt.time), minHeight: '64px', height: `${Math.max(64, (appt.durationMins || 45) / 60 * 75)}px` }}
                           >
-                            <div className="text-left flex-1 min-w-0 pr-sm">
-                              <div className="flex items-center gap-xs mb-[2px]">
-                                {isPri && (
-                                  <span className="material-symbols-outlined text-[16px] text-error animate-pulse">emergency</span>
-                                )}
-                                <p className="font-bold text-body-md truncate group-hover:text-primary dark:group-hover:text-primary-fixed-dim transition-colors">
-                                  {appt.name}
-                                </p>
-                                <span className="text-body-sm font-semibold opacity-80 select-none">
-                                  ({appt.time})
-                                </span>
+                            {/* Backdrop overlay to close menu when clicking outside */}
+                            {isMenuOpen && (
+                              <div
+                                className="fixed inset-0 z-20 cursor-default"
+                                onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); }}
+                              />
+                            )}
+
+                            {/* Card Content Row */}
+                            <div className="flex items-center justify-between gap-3 relative">
+                              {/* Left: Avatar + Details */}
+                              <div className="flex items-center gap-3 min-w-0 flex-1">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-xs ${
+                                  isCheckedIn ? 'bg-teal-100 text-teal-700 dark:bg-teal-900/60 dark:text-teal-300'
+                                    : isPending ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300'
+                                      : isConfirmed ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300'
+                                        : isInProgress ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/60 dark:text-orange-300'
+                                          : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300'
+                                }`}>
+                                  {appt.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'BN'}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <p className="font-bold text-sm text-slate-800 dark:text-white truncate leading-tight">
+                                      {appt.name}
+                                    </p>
+                                    <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap bg-slate-100 dark:bg-slate-700/60 px-2 py-0.5 rounded-md">
+                                      ⏰ {appt.time}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                                    {appt.type} · <span className="font-medium text-slate-700 dark:text-slate-300">{appt.doctor}</span>
+                                  </p>
+                                </div>
                               </div>
-                              <p className="text-body-sm opacity-90 truncate leading-normal">
-                                {appt.type} • <span className="font-medium">{appt.doctor}</span>
-                              </p>
+
+                              {/* Right: Status Badge & 3-Dots Action Menu */}
+                              <div className="flex items-center gap-2 flex-shrink-0 relative">
+                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border flex items-center gap-1.5 ${
+                                  isCheckedIn ? 'bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-700 text-teal-700 dark:text-teal-300'
+                                    : isPending ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-300'
+                                      : isConfirmed ? 'bg-blue-50 dark:bg-blue-950/50 border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300'
+                                        : isInProgress ? 'bg-orange-50 dark:bg-orange-950/50 border-orange-200 dark:border-orange-700 text-orange-700 dark:text-orange-300'
+                                          : isCancelled ? 'bg-slate-100 dark:bg-slate-800 border-slate-300 text-slate-500'
+                                            : 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300'
+                                }`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${
+                                    isCheckedIn ? 'bg-teal-500' : isPending ? 'bg-amber-500 animate-pulse' : isConfirmed ? 'bg-blue-500' : 'bg-emerald-500'
+                                  }`}></span>
+                                  {lang === 'vi' ? appt.status : (
+                                    isCheckedIn ? t.checkedInStatus
+                                      : isPending ? t.waitingAppt
+                                        : isConfirmed ? 'Confirmed'
+                                          : isInProgress ? 'In Progress'
+                                            : isCancelled ? 'Cancelled' : t.completed
+                                  )}
+                                </span>
+
+                                {/* 3-Dots Button */}
+                                {!isCompleted && !isCancelled && (
+                                  <div className="relative">
+                                    <button
+                                      id={`action-menu-btn-${appt.id}`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setOpenMenuId(isMenuOpen ? null : appt.id);
+                                      }}
+                                      className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors flex items-center justify-center"
+                                      title={lang === 'vi' ? 'Tùy chọn thao tác' : 'Actions menu'}
+                                    >
+                                      <span className="material-symbols-outlined text-[18px]">more_vert</span>
+                                    </button>
+
+                                    {/* Action Dropdown Menu */}
+                                    {isMenuOpen && (
+                                      <div className="absolute right-0 top-full mt-1 w-44 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-30 py-1.5 animate-in fade-in zoom-in-95 duration-100">
+                                        {isPending && (
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setOpenMenuId(null);
+                                              handleConfirmAppt(appt.id);
+                                            }}
+                                            className="w-full px-3 py-2 text-left text-xs font-semibold text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/40 flex items-center gap-2 transition-colors"
+                                          >
+                                            <span className="material-symbols-outlined text-[16px] text-blue-600">check_circle</span>
+                                            {lang === 'vi' ? 'Duyệt lịch hẹn' : 'Confirm Appt'}
+                                          </button>
+                                        )}
+
+                                        {isConfirmed && (
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setOpenMenuId(null);
+                                              handleCheckInAppt(appt.id);
+                                            }}
+                                            className="w-full px-3 py-2 text-left text-xs font-semibold text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/40 flex items-center gap-2 transition-colors"
+                                          >
+                                            <span className="material-symbols-outlined text-[16px] text-teal-600">how_to_reg</span>
+                                            {lang === 'vi' ? 'Tiếp đón Check-in' : 'Check In'}
+                                          </button>
+                                        )}
+
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setOpenMenuId(null);
+                                            handleToggleApptStatus(appt.id);
+                                          }}
+                                          className="w-full px-3 py-2 text-left text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 flex items-center gap-2 transition-colors"
+                                        >
+                                          <span className="material-symbols-outlined text-[16px] text-red-500">cancel</span>
+                                          {lang === 'vi' ? 'Hủy lịch hẹn' : 'Cancel Appt'}
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                            <span className={`text-[10px] font-bold px-sm py-[2px] rounded uppercase tracking-wider border select-none ${isCheck
-                              ? 'bg-primary-container/20 border-primary/20 text-primary dark:text-primary-fixed-dim'
-                              : isWait
-                                ? 'bg-amber-100 dark:bg-amber-950/40 border-amber-500/20 text-amber-700 dark:text-amber-300'
-                                : isPri
-                                  ? 'bg-error-container/20 border-error/20 text-error'
-                                  : 'bg-green-100 dark:bg-green-950/40 border-green-500/20 text-green-700 dark:text-green-300'
-                              }`}>
-                              {lang === 'vi' ? appt.status : (
-                                isCheck ? t.checkedInStatus :
-                                  isWait ? t.waitingAppt :
-                                    isPri ? t.priorityStatus : t.completed
-                              )}
-                            </span>
                           </div>
                         );
                       })
@@ -215,23 +317,29 @@ export default function ReceptionistAppointmentsTab({
                         <div className="space-y-sm flex-1 overflow-y-auto custom-scrollbar max-h-[260px]">
                           {dayAppointments.length > 0 ? (
                             dayAppointments.sort((a, b) => a.time.localeCompare(b.time)).map(appt => {
-                              const isCheck = appt.status === 'Đã check-in';
-                              const isWait = appt.status === 'Đang chờ';
-                              const isPri = appt.status === 'Ưu tiên';
+                              const isPending = appt.rawStatus === 'PENDING';
+                              const isConfirmed = appt.rawStatus === 'CONFIRMED';
+                              const isCheckedIn = appt.rawStatus === 'CHECKED_IN';
+                              const isInProgress = appt.rawStatus === 'IN_PROGRESS';
+                              const isCompleted = appt.rawStatus === 'COMPLETED';
+                              const isCancelled = appt.rawStatus === 'CANCELLED';
                               
                               return (
                                 <div 
                                   key={appt.id} 
-                                  onClick={() => handleToggleApptStatus(appt.id)}
-                                  className={`rounded border p-xs text-left cursor-pointer transition-all hover:translate-y-[-1px] hover:shadow-xs border-l-4 ${isCheck
-                                    ? 'bg-primary-container/10 border-primary dark:bg-blue-950/20'
-                                    : isWait
-                                      ? 'bg-amber-500/5 border-amber-500 dark:bg-amber-950/10'
-                                      : isPri
-                                        ? 'bg-error-container/10 border-error dark:bg-red-950/20'
-                                        : 'bg-green-500/5 border-green-500 dark:bg-green-950/10 opacity-70'
-                                    }`}
-                                  title={lang === 'vi' ? 'Nhấp để đổi trạng thái lịch hẹn' : 'Click to cycle appointment status'}
+                                  className={`rounded border p-xs text-left transition-all border-l-4 ${
+                                    isCheckedIn
+                                      ? 'bg-teal-500/5 border-teal-500 dark:bg-teal-950/10'
+                                      : isPending
+                                        ? 'bg-amber-500/5 border-amber-500 dark:bg-amber-950/10'
+                                        : isConfirmed
+                                          ? 'bg-blue-500/5 border-blue-500 dark:bg-blue-950/10'
+                                          : isInProgress
+                                            ? 'bg-orange-500/5 border-orange-500 dark:bg-orange-950/10'
+                                            : isCancelled
+                                              ? 'bg-error-container/10 border-error dark:bg-red-950/20 opacity-50'
+                                              : 'bg-green-500/5 border-green-500 dark:bg-green-950/10 opacity-70'
+                                  }`}
                                 >
                                   <p className="font-bold text-body-sm truncate text-on-surface dark:text-white">
                                     {appt.time} • {appt.name}
@@ -239,6 +347,29 @@ export default function ReceptionistAppointmentsTab({
                                   <p className="text-[11px] text-on-surface-variant dark:text-slate-400 truncate">
                                     {appt.type}
                                   </p>
+                                  {/* Inline action buttons */}
+                                  <div className="flex gap-1 mt-1.5">
+                                    {isPending && (
+                                      <button
+                                        id={`week-confirm-${appt.id}`}
+                                        onClick={() => handleConfirmAppt(appt.id)}
+                                        className="flex items-center gap-0.5 px-1.5 py-0.5 bg-blue-600 text-white text-[9px] font-bold rounded active:scale-95"
+                                      >
+                                        <span className="material-symbols-outlined text-[10px]">check</span>
+                                        {lang === 'vi' ? 'Duyệt' : 'Confirm'}
+                                      </button>
+                                    )}
+                                    {isConfirmed && (
+                                      <button
+                                        id={`week-checkin-${appt.id}`}
+                                        onClick={() => handleCheckInAppt(appt.id)}
+                                        className="flex items-center gap-0.5 px-1.5 py-0.5 bg-teal-600 text-white text-[9px] font-bold rounded active:scale-95"
+                                      >
+                                        <span className="material-symbols-outlined text-[10px]">how_to_reg</span>
+                                        Check-in
+                                      </button>
+                                    )}
+                                  </div>
                                 </div>
                               );
                             })

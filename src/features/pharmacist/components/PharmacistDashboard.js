@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { AuthContext } from '../../auth/context/AuthContext';
 import PharmacistDashboardTab from '../pages/Dashboard/PharmacistDashboardTab';
 import PharmacistPatientsTab from '../pages/Patients/PharmacistPatientsTab';
 import PharmacistPendingRxTab from '../pages/PendingPrescriptions/PharmacistPendingRxTab';
@@ -10,7 +11,7 @@ const translations = {
   vi: {
     dashboard: 'Bảng điều khiển',
     patients: 'Bệnh nhân',
-    pendingPrescriptions: 'Đơn thuốc chờ duyệt',
+    pendingPrescriptions: 'Đơn thuốc',
     labResults: 'Kết quả xét nghiệm',
     pharmacy: 'Nhà thuốc',
     settings: 'Cài đặt',
@@ -58,7 +59,7 @@ const translations = {
   en: {
     dashboard: 'Dashboard',
     patients: 'Patients',
-    pendingPrescriptions: 'Pending Prescriptions',
+    pendingPrescriptions: 'Prescriptions',
     labResults: 'Lab Results',
     pharmacy: 'Pharmacy',
     settings: 'Settings',
@@ -106,6 +107,8 @@ const translations = {
 };
 
 export default function PharmacistDashboard({ onNavigate, theme: propTheme, setTheme: propSetTheme, lang: propLang, setLang: propSetLang }) {
+  const { user, token } = useContext(AuthContext);
+  const activeToken = token || localStorage.getItem('token');
   const [localLang, setLocalLang] = useState('vi');
   const lang = propLang !== undefined ? propLang : localLang;
   const setLang = propSetLang !== undefined ? propSetLang : setLocalLang;
@@ -173,7 +176,7 @@ export default function PharmacistDashboard({ onNavigate, theme: propTheme, setT
           {[
             { label: 'Dashboard', key: 'dashboard', icon: 'dashboard' },
             { label: 'Bệnh nhân', key: 'patients', icon: 'group' },
-            { label: 'Đơn thuốc chờ duyệt', key: 'pendingPrescriptions', icon: 'prescription' },
+            { label: 'Đơn thuốc chờ duyệt', key: 'pendingPrescriptions', icon: 'prescriptions' },
             { label: 'Kết quả xét nghiệm', key: 'labResults', icon: 'biotech' },
             { label: 'Nhà thuốc', key: 'pharmacy', icon: 'inventory_2' },
             { label: 'Cài đặt', key: 'settings', icon: 'settings' }
@@ -183,15 +186,15 @@ export default function PharmacistDashboard({ onNavigate, theme: propTheme, setT
               <button
                 key={item.label}
                 onClick={() => { setActiveTab(item.label); setIsSidebarOpen(false); }}
-                className={`w-full flex items-center gap-3 px-6 py-3 border-l-4 transition-colors text-left ${isActive
+                className={`w-full flex items-center gap-3 px-6 py-3 border-l-4 transition-colors text-left overflow-hidden ${isActive
                   ? 'text-primary dark:text-primary-fixed-dim border-primary dark:border-primary-fixed-dim font-bold bg-surface-container-low dark:bg-slate-900'
                   : 'text-on-surface-variant dark:text-slate-400 border-transparent hover:bg-surface-container-high dark:hover:bg-slate-800'
                 }`}
               >
-                <span className="material-symbols-outlined" style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
+                <span className="material-symbols-outlined flex-shrink-0" style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
                   {item.icon}
                 </span>
-                <span className="font-label-md text-label-md">{t[item.key]}</span>
+                <span className="font-label-md text-label-md truncate">{t[item.key]}</span>
               </button>
             );
           })}
@@ -216,7 +219,7 @@ export default function PharmacistDashboard({ onNavigate, theme: propTheme, setT
               <span className="font-label-md text-label-md">{t.helpCenter}</span>
             </button>
             <button 
-              onClick={() => onNavigate('home')}
+              onClick={() => onNavigate('home', true)}
               className="w-full flex items-center gap-3 px-2 py-2 text-error hover:bg-error-container/20 rounded-md transition-colors"
             >
               <span className="material-symbols-outlined">logout</span>
@@ -321,6 +324,7 @@ export default function PharmacistDashboard({ onNavigate, theme: propTheme, setT
           <PharmacistPendingRxTab 
             lang={lang} 
             t={t} 
+            token={activeToken}
           />
         ) : activeTab === 'Kết quả xét nghiệm' ? (
           <PharmacistLabResultsTab 
@@ -330,6 +334,7 @@ export default function PharmacistDashboard({ onNavigate, theme: propTheme, setT
         ) : activeTab === 'Nhà thuốc' ? (
           <PharmacistPharmacyTab 
             lang={lang} 
+            token={activeToken}
           />
         ) : activeTab === 'Cài đặt' ? (
           <PharmacistSettingsTab 

@@ -409,24 +409,6 @@ export default function AdminSecurityTab({ lang, t }) {
           ))}
         </div>
       </div>
-
-      {/* Floating Emergency Lockdown Trigger */}
-      <div className="fixed bottom-lg right-lg z-50 group animate-bounce">
-        <button
-          onClick={() => {
-            if (window.confirm(lang === 'vi' ? '⚠️ XÁC NHẬN PHONG TỎA HỆ THỐNG?\n\nHành động này sẽ ngắt kết nối tất cả phiên truy cập và khóa hệ thống EMR.' : '⚠️ CONFIRM EMERGENCY SYSTEM LOCKDOWN?\n\nThis will terminate all active sessions and lock the EMR.')) {
-              alert(lang === 'vi' ? '🔒 HỆ THỐNG ĐÃ ĐƯỢC PHONG TỎA. Liên hệ IT Support để mở khóa.' : '🔒 SYSTEM LOCKDOWN ACTIVATED. Contact IT Support to restore access.');
-            }
-          }}
-          className="w-14 h-14 bg-error text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
-          title={lang === 'vi' ? 'Phong tỏa hệ thống khẩn cấp' : 'Emergency System Lockdown'}
-        >
-          <span className="material-symbols-outlined text-[28px] group-hover:rotate-12 transition-transform" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
-        </button>
-        <div className="absolute right-16 bottom-3 bg-error text-white font-label-md text-[11px] font-bold px-md py-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-lg">
-          {lang === 'vi' ? 'PHONG TỎA HỆ THỐNG KHẨN CẤP' : 'EMERGENCY SYSTEM LOCKDOWN'}
-        </div>
-      </div>
     </div>
   );
 }

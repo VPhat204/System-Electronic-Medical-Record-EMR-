@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../../auth/context/AuthContext';
+import { ToastContext } from '../../../shared/context/ToastContext';
 import PatientDashboardTab from '../pages/Dashboard/PatientDashboardTab';
 import PatientProfileTab from '../pages/Profile/PatientProfileTab';
 import PatientAppointmentsTab from '../pages/Appointments/PatientAppointmentsTab';
@@ -7,6 +8,7 @@ import PatientBillingTab from '../pages/Billing/PatientBillingTab';
 import PatientRecordsTab from '../pages/Records/PatientRecordsTab';
 import PatientSettingsTab from '../pages/Settings/PatientSettingsTab';
 import PatientVitalsTab from '../pages/Vitals/PatientVitalsTab';
+import BookingModal from '../../appointments/components/BookingModal';
 
 const translations = {
   vi: {
@@ -42,12 +44,15 @@ const translations = {
 };
 
 export default function PatientDashboard({ onNavigate, theme: propTheme, setTheme: propSetTheme, lang: propLang, setLang: propSetLang }) {
-  const { user } = useContext(AuthContext);
+  const { user, token } = useContext(AuthContext);
+  const { success: toastSuccess, error: toastError, warning: toastWarning, info: toastInfo } = useContext(ToastContext);
   const [localLang, setLocalLang] = useState('vi');
   const lang = propLang !== undefined ? propLang : localLang;
   const setLang = propSetLang !== undefined ? propSetLang : setLocalLang;
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('Dashboard');
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const [bookingSuccessCount, setBookingSuccessCount] = useState(0);
 
   const localVerified = user?.isVerified || false;
 
@@ -78,7 +83,7 @@ export default function PatientDashboard({ onNavigate, theme: propTheme, setThem
   };
 
   const handleOpenBooking = () => {
-    alert(lang === 'vi' ? 'Đang mở hộp thoại đặt lịch hẹn khám...' : 'Opening consultation booking modal...');
+    setBookingOpen(true);
   };
 
   return (
@@ -147,7 +152,7 @@ export default function PatientDashboard({ onNavigate, theme: propTheme, setThem
         <div className="p-4 mt-auto">
           <div className="border-t border-outline-variant dark:border-slate-800 pt-4 space-y-1 text-left">
             <button
-              onClick={() => alert('Liên hệ trung tâm hỗ trợ MedCore EMR')}
+              onClick={() => toastInfo('Liên hệ trung tâm hỗ trợ MedCore EMR')}
               className="w-full flex items-center gap-3 px-2 py-2 text-on-surface-variant dark:text-slate-400 hover:bg-surface-container-high dark:hover:bg-slate-800 rounded-md transition-colors"
             >
               <span className="material-symbols-outlined">help</span>
@@ -221,7 +226,7 @@ export default function PatientDashboard({ onNavigate, theme: propTheme, setThem
 
           {/* Notifications Button */}
           <button
-            onClick={() => alert(lang === 'vi' ? 'Không có thông báo mới.' : 'No new notifications.')}
+            onClick={() => toastInfo(lang === 'vi' ? 'Không có thông báo mới.' : 'No new notifications.')}
             className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant dark:text-slate-400 hover:bg-surface-container-high dark:hover:bg-slate-800 relative transition-colors"
           >
             <span className="material-symbols-outlined">notifications</span>
@@ -256,13 +261,13 @@ export default function PatientDashboard({ onNavigate, theme: propTheme, setThem
             <PatientDashboardTab lang={lang} t={t} setActiveTab={setActiveTab} onOpenBooking={handleOpenBooking} localVerified={localVerified}/>
           )}
           {activeTab === 'Records' && (
-            <PatientRecordsTab lang={lang} t={t} />
+            <PatientRecordsTab lang={lang} t={t} token={token || localStorage.getItem('token')} user={user} />
           )}
           {activeTab === 'Profile' && (
             <PatientProfileTab lang={lang} t={t} />
           )}
           {activeTab === 'Appointments' && (
-            <PatientAppointmentsTab lang={lang} t={t} onOpenBooking={handleOpenBooking} />
+            <PatientAppointmentsTab lang={lang} t={t} onOpenBooking={handleOpenBooking} key={bookingSuccessCount} />
           )}
           {activeTab === 'Billing' && (
             <PatientBillingTab lang={lang} t={t} />
@@ -301,6 +306,11 @@ export default function PatientDashboard({ onNavigate, theme: propTheme, setThem
         })}
       </nav>
 
+      <BookingModal
+        isOpen={bookingOpen}
+        onClose={() => setBookingOpen(false)}
+        onSuccess={() => setBookingSuccessCount(prev => prev + 1)}
+      />
     </div>
   );
 }

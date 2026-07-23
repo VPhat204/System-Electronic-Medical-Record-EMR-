@@ -1,4 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { AuthContext } from '../../auth/context/AuthContext';
+import { ToastContext } from '../../../shared/context/ToastContext';
+import appointmentService from '../../appointments/services/appointmentService';
+import prescriptionService from '../../../shared/services/prescriptionService';
 import DoctorDashboardTab from '../pages/Dashboard/DoctorDashboardTab';
 import DoctorPatientsTab from '../pages/Patients/DoctorPatientsTab';
 import DoctorAppointmentsTab from '../pages/Appointments/DoctorAppointmentsTab';
@@ -291,13 +295,130 @@ const initialStaff = [
 ];
 
 export default function DoctorDashboard({ onNavigate, theme: propTheme, setTheme: propSetTheme, lang: propLang, setLang: propSetLang }) {
+  const { token } = useContext(AuthContext);
+  const { success: toastSuccess, error: toastError, warning: toastWarning, info: toastInfo } = useContext(ToastContext);
   const [localTheme, setLocalTheme] = useState(() => localStorage.getItem('theme') || 'light');
   const currentTheme = propTheme !== undefined ? propTheme : localTheme;
   const settingsDark = currentTheme === 'dark';
-  const [schedule, setSchedule] = useState(initialSchedule);
-  const [activePatientId, setActivePatientId] = useState(1); // Default is Sarah Connor
+  const [schedule, setSchedule] = useState([]);
+  const [activePatientId, setActivePatientId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('Dashboard');
+
+  const toDateKey = (dateValue) => {
+    const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const getWeekDates = (dateValue) => {
+    const base = new Date(dateValue);
+    const day = base.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    const start = new Date(base);
+    start.setDate(base.getDate() + diff);
+    return Array.from({ length: 7 }, (_, index) => {
+      const current = new Date(start);
+      current.setDate(start.getDate() + index);
+      return current;
+    });
+  };
+
+  const shiftSelectedDate = (offset) => {
+    const nextDate = new Date(selectedDate);
+    if (apptView === 'day') {
+      nextDate.setDate(nextDate.getDate() + offset);
+    } else if (apptView === 'week') {
+      nextDate.setDate(nextDate.getDate() + offset * 7);
+    } else if (apptView === 'month') {
+      nextDate.setMonth(nextDate.getMonth() + offset);
+    } else {
+      nextDate.setFullYear(nextDate.getFullYear() + offset);
+    }
+    setSelectedDate(nextDate);
+  };
+
+  const calculateTopOffset = (timeStr) => {
+    try {
+      const [hr, min] = timeStr.split(':').map(Number);
+      const startHr = 8;
+      const diffHrs = hr - startHr;
+      const pixelsPerHour = 80;
+      const totalPixels = diffHrs * pixelsPerHour + (min / 60) * pixelsPerHour;
+      return `${Math.max(0, totalPixels)}px`;
+    } catch (err) {
+      return '20px';
+    }
+  };
+
+  const loadDoctorAppointments = async () => {
+    if (!token) return;
+    try {
+      const data = await appointmentService.getDoctorAppointments(token);
+      const mappedSchedule = data.map((appt) => {
+        const initials = appt.patient?.fullName
+          ? appt.patient.fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+          : 'PT';
+        return {
+          id: appt.id,
+          date: appt.appointmentDate,
+          time: appt.appointmentTime,
+          initials,
+          name: appt.patient?.fullName || 'Bệnh nhân ẩn danh',
+          patientDbId: appt.patientId,
+          reason: appt.symptoms || 'Khám bệnh',
+          status: appt.status,
+          rawStatus: appt.status,
+          type: appt.symptoms || 'Khám bệnh',
+          doctor: appt.doctor?.fullName ? `BS. ${appt.doctor.fullName}` : 'Chưa gán',
+          vitals: { bp: '120 / 80', spo2: '98%', temp: '36.5°C' }
+        };
+      });
+      setSchedule(mappedSchedule);
+      if (mappedSchedule.length > 0) {
+        setActivePatientId(mappedSchedule[0].id);
+      }
+
+      // Map schedule data to Doctor agenda
+      const mappedAgenda = data.map((appt) => {
+        const dateParts = (appt.appointmentDate || '').split('-');
+        const yr = dateParts[0] ? parseInt(dateParts[0]) : new Date().getFullYear();
+        const mo = dateParts[1] ? parseInt(dateParts[1]) - 1 : new Date().getMonth();
+        const dy = dateParts[2] ? parseInt(dateParts[2]) : new Date().getDate();
+
+        let displayStatus = 'Pending';
+        if (appt.status === 'CONFIRMED' || appt.status === 'CHECKED_IN' || appt.status === 'IN_PROGRESS' || appt.status === 'COMPLETED') {
+          displayStatus = 'Confirmed';
+        } else if (appt.status === 'CANCELLED') {
+          displayStatus = 'Cancelled';
+        }
+
+        return {
+          id: appt.id,
+          day: dy,
+          month: mo,
+          year: yr,
+          time: appt.appointmentTime,
+          patient: appt.patient?.fullName || 'Bệnh nhân ẩn danh',
+          type: appt.symptoms || 'Khám bệnh',
+          doctor: appt.doctor?.fullName ? `BS. ${appt.doctor.fullName}` : 'Chưa gán',
+          avatar: appt.doctor?.avatar || null,
+          status: displayStatus
+        };
+      });
+      setAgenda(mappedAgenda);
+    } catch (err) {
+      console.error('Failed to load doctor appointments:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (token) {
+      loadDoctorAppointments();
+    }
+  }, [token]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [commsOpen, setCommsOpen] = useState(false);
   const [localLang, setLocalLang] = useState('vi');
@@ -312,12 +433,59 @@ export default function DoctorDashboard({ onNavigate, theme: propTheme, setTheme
   const [genderFilter, setGenderFilter] = useState('Gender');
   const [statusFilter, setStatusFilter] = useState('Status');
 
-  // Appointments states
-  const [agenda, setAgenda] = useState(initialAgenda);
-  const [selectedDay, setSelectedDay] = useState(8); // Default Oct 8 (Today)
-  const [calMonth, setCalMonth] = useState(9); // October (0-indexed: 9)
-  const [calYear, setCalYear] = useState(2024); // 2024
-  const [calendarMode, setCalendarMode] = useState('Monthly'); // 'Monthly' or 'Weekly'
+  const [agenda, setAgenda] = useState([]);
+  const [apptView, setApptView] = useState('day');
+  const [selectedDate, setSelectedDate] = useState(() => new Date());
+
+  const selectedDay = selectedDate.getDate();
+  const calMonth = selectedDate.getMonth();
+  const calYear = selectedDate.getFullYear();
+
+  const apptWaiting = schedule.filter(a => a.status === 'CHECKED_IN').length;
+  const apptInRoom = schedule.filter(a => a.status === 'IN_PROGRESS').length;
+  const apptCompleted = schedule.filter(a => a.status === 'COMPLETED').length;
+
+  const visibleAppointments = schedule.filter(appt => {
+    const apptDateKey = appt.date || toDateKey(selectedDate);
+    const apptDate = new Date(`${apptDateKey}T00:00:00`);
+    const selectedKey = toDateKey(selectedDate);
+
+    if (apptView === 'day') {
+      return apptDateKey === selectedKey;
+    }
+
+    if (apptView === 'week') {
+      return getWeekDates(selectedDate).some(day => toDateKey(day) === apptDateKey);
+    }
+
+    if (apptView === 'month') {
+      return apptDate.getMonth() === selectedDate.getMonth() && apptDate.getFullYear() === selectedDate.getFullYear();
+    }
+
+    return apptDate.getFullYear() === selectedDate.getFullYear();
+  }).filter(appt => appt.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  const handleToggleApptStatus = async (apptId) => {
+    const appt = schedule.find(a => a.id === apptId);
+    if (!appt) return;
+
+    let nextStatus = '';
+    if (appt.status === 'CHECKED_IN') {
+      nextStatus = 'IN_PROGRESS';
+    } else if (appt.status === 'IN_PROGRESS') {
+      nextStatus = 'COMPLETED';
+    } else {
+      toastWarning(lang === 'vi' ? 'Bạn chỉ có quyền bắt đầu khám hoặc hoàn thành khám cho bệnh nhân đã check-in!' : 'You can only start or complete consultations for checked-in patients!');
+      return;
+    }
+
+    try {
+      await appointmentService.updateAppointmentStatus(token, apptId, nextStatus);
+      await loadDoctorAppointments();
+    } catch (err) {
+      toastError(err.message || 'Cập nhật trạng thái thất bại.');
+    }
+  };
 
   // Lab Results states
   const [labTests, setLabTests] = useState(initialLabTests);
@@ -343,7 +511,7 @@ export default function DoctorDashboard({ onNavigate, theme: propTheme, setTheme
   const [staffList, setStaffList] = useState(initialStaff);
   const [staffRoleFilter, setStaffRoleFilter] = useState('All'); // 'All', 'Doctors', 'Nursing', 'Admin'
 
-  const activePatient = schedule.find(p => p.id === activePatientId) || schedule[0];
+  const activePatient = schedule.find(p => p.id === activePatientId) || schedule[0] || null;
 
   // Sync state with document dark class on mount and change (only if propTheme is not provided)
   useEffect(() => {
@@ -366,21 +534,37 @@ export default function DoctorDashboard({ onNavigate, theme: propTheme, setTheme
     }
   };
 
-  const handleStartConsult = (id) => {
-    setSchedule(prev => prev.map(p => {
-      if (p.id === id) {
-        return { ...p, status: 'IN CONSULT' };
-      }
-      if (p.status === 'IN CONSULT') {
-        return { ...p, status: 'ARRIVED' }; // revert other consulting
-      }
-      return p;
-    }));
-    setActivePatientId(id);
+  const handleStartConsult = async (id) => {
+    try {
+      await appointmentService.updateAppointmentStatus(token, id, 'IN_PROGRESS');
+      setSchedule(prev => prev.map(p => {
+        if (p.id === id) {
+          return { ...p, status: 'IN_PROGRESS' };
+        }
+        return p;
+      }));
+      setActivePatientId(id);
+    } catch (err) {
+      toastError(err.message || 'Không thể bắt đầu khám.');
+    }
+  };
+
+  const handleCompleteConsult = async (id) => {
+    try {
+      await appointmentService.updateAppointmentStatus(token, id, 'COMPLETED');
+      setSchedule(prev => prev.map(p => {
+        if (p.id === id) {
+          return { ...p, status: 'COMPLETED' };
+        }
+        return p;
+      }));
+    } catch (err) {
+      toastError(err.message || 'Không thể hoàn thành khám.');
+    }
   };
 
   const handleNewConsultation = () => {
-    alert('Bắt đầu một hồ sơ khám bệnh lâm sàng mới. (Clinical consultation initialized)');
+    toastInfo('Bắt đầu một hồ sơ khám bệnh lâm sàng mới. (Clinical consultation initialized)');
   };
 
   const handleNewPatient = () => {
@@ -429,12 +613,14 @@ export default function DoctorDashboard({ onNavigate, theme: propTheme, setTheme
     };
 
     setAgenda([...agenda, newAppointment]);
-    setSelectedDay(dayInput);
+    const nextD = new Date(selectedDate);
+    nextD.setDate(dayInput);
+    setSelectedDate(nextD);
   };
 
   const handleAddMedication = () => {
     if (!draftMedName.trim()) {
-      alert('Vui lòng nhập tên thuốc! (Please enter medication name)');
+      toastWarning('Vui lòng nhập tên thuốc! (Please enter medication name)');
       return;
     }
     const newMed = {
@@ -454,25 +640,57 @@ export default function DoctorDashboard({ onNavigate, theme: propTheme, setTheme
     setCurrentMedList(prev => prev.filter((_, i) => i !== idx));
   };
 
-  const handleSendPrescription = () => {
+  const handleSendPrescription = async () => {
     if (currentMedList.length === 0) {
-      alert('Vui lòng thêm ít nhất một loại thuốc vào đơn thuốc! (Please add at least one medication)');
+      toastWarning('Vui lòng thêm ít nhất một loại thuốc vào đơn thuốc!');
       return;
     }
-    const patName = patients.find(p => p.id === prescPatientId)?.name || 'Unknown Patient';
-    const newPresc = {
-      id: `PRSC-${Math.floor(10000 + Math.random() * 90000)}`,
-      patient: patName,
-      date: 'Oct 24, 2026',
-      diagnosis: prescDiagnosis || 'Routine Follow-up',
-      medications: currentMedList,
-      status: 'Pending Pharmacist Review'
-    };
 
-    setPrescriptions([newPresc, ...prescriptions]);
-    setCurrentMedList([]);
-    setPrescDiagnosis('');
-    alert(`Đơn thuốc kê cho bệnh nhân ${patName} đã được ký số và chuyển trực tiếp tới hệ thống Nhà thuốc!`);
+    const patObj = patients.find(p => String(p.id) === String(prescPatientId));
+    const targetAppt = schedule.find(s => String(s.patientDbId) === String(prescPatientId) || String(s.id) === String(prescPatientId)) || schedule[0];
+
+    const patName = patObj?.name || targetAppt?.name || 'Bệnh nhân';
+    const patientId = targetAppt?.patientDbId || patObj?.id || 1;
+    const appointmentId = targetAppt?.id || 1;
+
+    try {
+      const items = currentMedList.map(med => ({
+        medicineId: med.medicineId ? Number(med.medicineId) : null,
+        medicineName: med.name,
+        unit: med.unit || 'Viên',
+        quantity: Number(med.quantity) || 1,
+        price: med.price ? parseFloat(med.price) : 0,
+        dosage: `${med.dosage || ''} (${med.frequency || ''})`.trim(),
+        instructions: `${med.duration || ''} - ${med.notes || ''}`.trim(),
+      }));
+
+      const payload = {
+        appointmentId: Number(appointmentId),
+        patientId: Number(patientId),
+        notes: prescDiagnosis,
+        items,
+      };
+
+      const resData = await prescriptionService.createPrescription(token, payload);
+      const createdRx = resData.prescription;
+
+      const newPresc = {
+        id: createdRx?.id ? `PRSC-${createdRx.id}` : `PRSC-${Math.floor(10000 + Math.random() * 90000)}`,
+        patient: patName,
+        date: new Date().toLocaleDateString('vi-VN'),
+        diagnosis: prescDiagnosis || 'Routine Follow-up',
+        medications: currentMedList,
+        status: 'Pending Pharmacist Review'
+      };
+
+      setPrescriptions(prev => [newPresc, ...prev]);
+      setCurrentMedList([]);
+      setPrescDiagnosis('');
+      toastSuccess(`Kê đơn thuốc thành công! Đơn thuốc cho ${patName} đã được ký số và chuyển trực tiếp tới hệ thống Nhà thuốc.`);
+    } catch (err) {
+      console.error('Send prescription error:', err);
+      toastError(err.message || 'Lỗi khi gửi đơn thuốc.');
+    }
   };
 
   // Filter schedule based on search query
@@ -643,7 +861,7 @@ export default function DoctorDashboard({ onNavigate, theme: propTheme, setTheme
               <span className="font-label-md text-label-md">{t.helpCenter}</span>
             </button>
             <button
-              onClick={() => onNavigate('home')}
+              onClick={() => onNavigate('home', true)}
               className="w-full flex items-center gap-3 px-2 py-2 text-error hover:bg-error-container/20 rounded-md transition-colors"
             >
               <span className="material-symbols-outlined">logout</span>
@@ -746,6 +964,7 @@ export default function DoctorDashboard({ onNavigate, theme: propTheme, setTheme
               activePatientId={activePatientId}
               setActivePatientId={setActivePatientId}
               handleStartConsult={handleStartConsult}
+              handleCompleteConsult={handleCompleteConsult}
               activePatient={activePatient}
             />
           )}
@@ -771,24 +990,23 @@ export default function DoctorDashboard({ onNavigate, theme: propTheme, setTheme
             <DoctorAppointmentsTab
               lang={lang}
               t={t}
-              calendarMode={calendarMode}
-              setCalendarMode={setCalendarMode}
-              handleBookAppointment={handleBookAppointment}
-              totalPatientsCount={totalPatientsCount}
-              confirmedCount={confirmedCount}
-              pendingCount={pendingCount}
-              cancelledCount={cancelledCount}
-              calMonth={calMonth}
-              setCalMonth={setCalMonth}
-              calYear={calYear}
-              setCalYear={setCalYear}
-              selectedDay={selectedDay}
-              setSelectedDay={setSelectedDay}
-              agenda={agenda}
-              setAgenda={setAgenda}
-              daysInMonth={daysInMonth}
-              startDayOfWeek={startDayOfWeek}
+              token={token}
+              setActiveTab={setActiveTab}
+              apptView={apptView}
+              setApptView={setApptView}
+              shiftSelectedDate={shiftSelectedDate}
+              selectedDate={selectedDate}
+              getWeekDates={getWeekDates}
+              toDateKey={toDateKey}
+              appointments={schedule}
+              visibleAppointments={visibleAppointments}
+              handleToggleApptStatus={handleToggleApptStatus}
+              calculateTopOffset={calculateTopOffset}
+              apptWaiting={apptWaiting}
+              apptInRoom={apptInRoom}
+              apptCompleted={apptCompleted}
               filteredAgenda={filteredAgenda}
+              setSelectedDate={setSelectedDate}
             />
           )}
 
@@ -807,6 +1025,8 @@ export default function DoctorDashboard({ onNavigate, theme: propTheme, setTheme
             <DoctorPharmacyTab
               lang={lang}
               t={t}
+              token={token}
+              schedule={schedule}
               handleSendPrescription={handleSendPrescription}
               prescPatientId={prescPatientId}
               setPrescPatientId={setPrescPatientId}
@@ -834,8 +1054,9 @@ export default function DoctorDashboard({ onNavigate, theme: propTheme, setTheme
           {activeTab === 'Clinical Notes' && (
             <DoctorClinicalNotesTab
               lang={lang}
-              t={t}
-              patients={patients}
+              token={token}
+              schedule={schedule}
+              onRecordSaved={loadDoctorAppointments}
             />
           )}
 

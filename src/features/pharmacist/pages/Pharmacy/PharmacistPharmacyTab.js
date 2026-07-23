@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import prescriptionService from '../../../../shared/services/prescriptionService';
 
 const localTranslations = {
   vi: {
@@ -131,69 +132,51 @@ const localTranslations = {
   }
 };
 
-const CATEGORIES_LIST = ['Antibiotics', 'Painkillers', 'Cardiovascular', 'Respiratory', 'Endocrine'];
+const CATEGORIES_LIST = ['Kháng sinh', 'Giảm đau', 'Tim mạch', 'Hô hấp', 'Nội tiết', 'Thần kinh', 'Tiêu hóa', 'Dược phẩm'];
+const MEDICINE_API = 'http://localhost:5000/api/medicines';
 
-export default function PharmacistPharmacyTab({ lang = 'vi' }) {
+export default function PharmacistPharmacyTab({ lang = 'vi', token }) {
   const t = localTranslations[lang];
+  const activeToken = token || localStorage.getItem('token');
 
-  // Initial Mock Medications Inventory (Refactored to 2026-07-15)
-  const [medications, setMedications] = useState([
-    {
-      id: 1,
-      name: 'Amoxicillin 500mg',
-      form: 'Capsules (Blister Pack)',
-      category: 'Antibiotics',
-      sku: 'AMX-00234-P',
-      quantity: 14,
-      threshold: 50,
-      expiryDate: '2026-10-24', // Future expiry
-      unitPrice: 12.50
-    },
-    {
-      id: 2,
-      name: 'Lisinopril 10mg',
-      form: 'Tablets (Bottle)',
-      category: 'Cardiovascular',
-      sku: 'LIS-99120-B',
-      quantity: 240,
-      threshold: 30,
-      expiryDate: '2027-01-15', // Future expiry
-      unitPrice: 8.20
-    },
-    {
-      id: 3,
-      name: 'Ibuprofen 400mg',
-      form: 'Gel Caps',
-      category: 'Painkillers',
-      sku: 'IBU-88221-G',
-      quantity: 115,
-      threshold: 20,
-      expiryDate: '2026-07-27', // Expiring in 12 days (relative to 2026-07-15)
-      unitPrice: 4.50
-    },
-    {
-      id: 4,
-      name: 'Metformin 500mg',
-      form: 'ER Tablets',
-      category: 'Endocrine',
-      sku: 'MET-44102-T',
-      quantity: 0,
-      threshold: 40,
-      expiryDate: 'N/A', // Out of stock
-      unitPrice: 15.00
-    },
-    {
-      id: 5,
-      name: 'Salbutamol Inhaler',
-      form: '100mcg/dose',
-      category: 'Respiratory',
-      sku: 'SAL-10293-I',
-      quantity: 52,
-      threshold: 15,
-      expiryDate: '2026-12-20', // Future expiry
-      unitPrice: 24.00
+  // Real medicines from DB
+  const [medications, setMedications] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [alertMsg, setAlertMsg] = useState({ type: '', text: '' });
+
+  // Fetch medicines from real DB
+  const fetchMedicines = async () => {
+    if (!activeToken) return;
+    setIsLoading(true);
+    try {
+      const res = await fetch(MEDICINE_API, {
+        headers: { 'Authorization': `Bearer ${activeToken}` }
+      });
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        const mapped = data.map(m => ({
+          id: m.id,
+          name: m.name,
+          form: m.unit || 'Viên',
+          activeIngredient: m.activeIngredient || '',
+          category: m.category || 'Dược phẩm',
+          sku: m.code,
+          quantity: m.stockQuantity,
+          threshold: m.reorderThreshold || 20,
+          expiryDate: m.expiryDate || null,
+          unitPrice: parseFloat(m.price) || 0
+        }));
+        setMedications(mapped);
+      }
+    } catch (err) {
+      console.error('Fetch medicines error:', err);
+      setAlertMsg({ type: 'error', text: 'Không thể tải danh sách thuốc từ CSDL.' });
+    } finally {
+      setIsLoading(false);
     }
-  ]);
+  };
+
+  useEffect(() => { fetchMedicines(); }, [activeToken]);
 
   // Filters State
   const [searchQuery, setSearchQuery] = useState('');
@@ -201,23 +184,39 @@ export default function PharmacistPharmacyTab({ lang = 'vi' }) {
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [selectedExpiry, setSelectedExpiry] = useState('Any');
 
+  // Pagination State (Default 5 items/page, adjustable 5, 10, 15, 20)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+
+  // Reset to Page 1 when filters or page size change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategory, selectedStatus, selectedExpiry, pageSize]);
+
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState('add'); // 'add' or 'edit'
+  const [modalMode, setModalMode] = useState('add'); // 'add' | 'edit' | 'restock'
   const [currentMed, setCurrentMed] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Form Fields State
+  // Form Fields State (Add/Edit)
   const [formName, setFormName] = useState('');
   const [formForm, setFormForm] = useState('');
-  const [formCategory, setFormCategory] = useState('Antibiotics');
+  const [formActiveIngredient, setFormActiveIngredient] = useState('');
+  const [formCategory, setFormCategory] = useState('Dược phẩm');
   const [formSku, setFormSku] = useState('');
   const [formQuantity, setFormQuantity] = useState('');
-  const [formThreshold, setFormThreshold] = useState('');
+  const [formThreshold, setFormThreshold] = useState('20');
   const [formExpiryDate, setFormExpiryDate] = useState('');
   const [formUnitPrice, setFormUnitPrice] = useState('');
 
+  // Restock Form State
+  const [restockQty, setRestockQty] = useState('');
+  const [restockExpiry, setRestockExpiry] = useState('');
+  const [restockPrice, setRestockPrice] = useState('');
+
   // Date Parsing Helpers
-  const TODAY = new Date('2026-07-15');
+  const TODAY = new Date();
 
   const getDaysToExpiry = (dateStr) => {
     if (!dateStr || dateStr === 'N/A') return Infinity;
@@ -244,21 +243,19 @@ export default function PharmacistPharmacyTab({ lang = 'vi' }) {
 
   const totalInventoryValue = useMemo(() => {
     const sum = medications.reduce((total, med) => total + (med.quantity * med.unitPrice), 0);
-    return sum.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+    return sum.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
   }, [medications]);
 
   // Handle Opening Modal for Add
   const handleOpenAddModal = () => {
     setModalMode('add');
     setCurrentMed(null);
-    setFormName('');
-    setFormForm('');
-    setFormCategory('Antibiotics');
-    setFormSku('');
-    setFormQuantity('');
-    setFormThreshold('');
-    setFormExpiryDate('');
-    setFormUnitPrice('');
+    setFormName(''); setFormForm('Viên'); setFormActiveIngredient('');
+    setFormCategory('Dược phẩm');
+    setFormSku(`MED-${Math.floor(100000 + Math.random() * 900000)}`);
+    setFormQuantity('100'); setFormThreshold('20');
+    setFormExpiryDate(''); setFormUnitPrice('0');
+    setAlertMsg({ type: '', text: '' });
     setIsModalOpen(true);
   };
 
@@ -266,116 +263,203 @@ export default function PharmacistPharmacyTab({ lang = 'vi' }) {
   const handleOpenEditModal = (med) => {
     setModalMode('edit');
     setCurrentMed(med);
-    setFormName(med.name);
-    setFormForm(med.form);
+    setFormName(med.name); setFormForm(med.form);
+    setFormActiveIngredient(med.activeIngredient || '');
     setFormCategory(med.category);
-    setFormSku(med.sku);
-    setFormQuantity(med.quantity.toString());
+    setFormSku(med.sku); setFormQuantity(med.quantity.toString());
     setFormThreshold(med.threshold.toString());
-    setFormExpiryDate(med.expiryDate === 'N/A' ? '' : med.expiryDate);
+    setFormExpiryDate(med.expiryDate || '');
     setFormUnitPrice(med.unitPrice.toString());
+    setAlertMsg({ type: '', text: '' });
     setIsModalOpen(true);
   };
 
-  // Handle Deleting Medicine
-  const handleDeleteMed = (id) => {
-    if (window.confirm(t.actionConfirmDelete)) {
-      setMedications(prev => prev.filter(m => m.id !== id));
+  // Handle Opening Restock Modal
+  const handleOpenRestockModal = (med) => {
+    setModalMode('restock');
+    setCurrentMed(med);
+    setRestockQty('');
+    setRestockExpiry(med.expiryDate || '');
+    setRestockPrice(med.unitPrice.toString());
+    setAlertMsg({ type: '', text: '' });
+    setIsModalOpen(true);
+  };
+
+  // Handle Delete (soft delete → INACTIVE)
+  const handleDeleteMed = async (id) => {
+    if (!window.confirm(t.actionConfirmDelete)) return;
+    try {
+      const res = await fetch(`${MEDICINE_API}/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${activeToken}` }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAlertMsg({ type: 'success', text: data.message || 'Đã xóa thuốc thành công.' });
+        fetchMedicines();
+      } else {
+        setAlertMsg({ type: 'error', text: data.message || 'Xóa thuốc thất bại.' });
+      }
+    } catch (err) {
+      setAlertMsg({ type: 'error', text: 'Lỗi kết nối máy chủ khi xóa thuốc.' });
     }
   };
 
-  // Handle Save Form
-  const handleSave = (e) => {
+  // Handle Save Form (Add or Edit)
+  const handleSave = async (e) => {
     e.preventDefault();
-    if (!formName || !formSku) return;
-
-    const quantityNum = parseInt(formQuantity) || 0;
-    const thresholdNum = parseInt(formThreshold) || 0;
-    const priceNum = parseFloat(formUnitPrice) || 0;
-    const expiryStr = formExpiryDate || 'N/A';
-
-    if (modalMode === 'add') {
-      const newMed = {
-        id: medications.length > 0 ? Math.max(...medications.map(m => m.id)) + 1 : 1,
-        name: formName,
-        form: formForm,
-        category: formCategory,
-        sku: formSku,
-        quantity: quantityNum,
-        threshold: thresholdNum,
-        expiryDate: expiryStr,
-        unitPrice: priceNum
-      };
-      setMedications(prev => [...prev, newMed]);
-    } else if (modalMode === 'edit' && currentMed) {
-      setMedications(prev => prev.map(m => m.id === currentMed.id ? {
-        ...m,
-        name: formName,
-        form: formForm,
-        category: formCategory,
-        sku: formSku,
-        quantity: quantityNum,
-        threshold: thresholdNum,
-        expiryDate: expiryStr,
-        unitPrice: priceNum
-      } : m));
+    if (!formName.trim()) {
+      setAlertMsg({ type: 'error', text: 'Vui lòng nhập Tên thuốc.' });
+      return;
     }
-    setIsModalOpen(false);
+    const finalCode = formSku.trim() || `MED-${Math.floor(100000 + Math.random() * 900000)}`;
+    setIsSaving(true);
+    try {
+      const payload = {
+        name: formName.trim(),
+        unit: formForm.trim() || 'Viên',
+        activeIngredient: formActiveIngredient.trim() || null,
+        category: formCategory,
+        code: finalCode,
+        stockQuantity: parseInt(formQuantity) || 0,
+        reorderThreshold: parseInt(formThreshold) || 20,
+        expiryDate: formExpiryDate || null,
+        price: parseFloat(formUnitPrice) || 0,
+      };
+
+      let res;
+      if (modalMode === 'add') {
+        res = await fetch(MEDICINE_API, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${activeToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } else {
+        res = await fetch(`${MEDICINE_API}/${currentMed.id}`, {
+          method: 'PUT',
+          headers: { 'Authorization': `Bearer ${activeToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }
+
+      const data = await res.json();
+      if (res.ok) {
+        setAlertMsg({ type: 'success', text: data.message || (modalMode === 'add' ? 'Thêm thuốc thành công!' : 'Cập nhật thành công!') });
+        fetchMedicines();
+        setIsModalOpen(false);
+      } else {
+        setAlertMsg({ type: 'error', text: data.message || 'Lưu thất bại.' });
+      }
+    } catch (err) {
+      setAlertMsg({ type: 'error', text: 'Lỗi kết nối máy chủ.' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Handle Restock
+  const handleRestock = async (e) => {
+    e.preventDefault();
+    if (!restockQty || Number(restockQty) <= 0) {
+      setAlertMsg({ type: 'error', text: 'Vui lòng nhập số lượng nhập kho hợp lệ (> 0).' });
+      return;
+    }
+    setIsSaving(true);
+    try {
+      const res = await fetch(`${MEDICINE_API}/${currentMed.id}/restock`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${activeToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          addQuantity: Number(restockQty),
+          expiryDate: restockExpiry || null,
+          price: restockPrice ? parseFloat(restockPrice) : undefined,
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAlertMsg({ type: 'success', text: data.message || 'Nhập kho thành công!' });
+        fetchMedicines();
+        setIsModalOpen(false);
+      } else {
+        setAlertMsg({ type: 'error', text: data.message || 'Nhập kho thất bại.' });
+      }
+    } catch (err) {
+      setAlertMsg({ type: 'error', text: 'Lỗi kết nối máy chủ.' });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Filter & Search Logic
   const filteredMedications = useMemo(() => {
     return medications.filter(med => {
-      // 1. Text Search
-      const searchStr = `${med.name} ${med.sku} ${med.category} ${med.form}`.toLowerCase();
-      if (searchQuery && !searchStr.includes(searchQuery.toLowerCase())) {
-        return false;
-      }
-
-      // 2. Category Filter
-      if (selectedCategory !== 'All' && med.category !== selectedCategory) {
-        return false;
-      }
-
-      // 3. Stock Status Filter
+      const searchStr = `${med.name} ${med.sku} ${med.category} ${med.form} ${med.activeIngredient}`.toLowerCase();
+      if (searchQuery && !searchStr.includes(searchQuery.toLowerCase())) return false;
+      if (selectedCategory !== 'All' && med.category !== selectedCategory) return false;
       const status = getStatus(med);
       if (selectedStatus !== 'All') {
         if (selectedStatus === 'In Stock' && status !== 'IN_STOCK' && status !== 'EXPIRING_SOON') return false;
         if (selectedStatus === 'Low Stock' && status !== 'LOW_STOCK') return false;
         if (selectedStatus === 'Out of Stock' && status !== 'OUT_OF_STOCK') return false;
       }
-
-      // 4. Expiry Filter
       if (selectedExpiry !== 'Any') {
         const days = getDaysToExpiry(med.expiryDate);
         if (selectedExpiry === 'under30' && (days < 0 || days > 30)) return false;
         if (selectedExpiry === 'under90' && (days < 0 || days > 90)) return false;
       }
-
       return true;
     });
   }, [medications, searchQuery, selectedCategory, selectedStatus, selectedExpiry]);
 
-  // Export CSV simulation
+  // Dynamic Pagination Calculation
+  const totalFilteredCount = filteredMedications.length;
+  const totalPages = Math.max(1, Math.ceil(totalFilteredCount / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+
+  const startIndex = (safeCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalFilteredCount);
+
+  const paginatedMedications = useMemo(() => {
+    return filteredMedications.slice(startIndex, endIndex);
+  }, [filteredMedications, startIndex, endIndex]);
+
+  // Export CSV
   const handleExportCSV = () => {
     let csvContent = 'data:text/csv;charset=utf-8,';
-    csvContent += 'Name,Category,SKU/Batch,Quantity,Expiry,Price,Status\n';
+    csvContent += 'Tên Thuốc,Đơn vị,Danh mục,SKU,Số lượng,Hạn dùng,Đơn giá,Trạng thái\n';
     filteredMedications.forEach(m => {
-      csvContent += `"${m.name} (${m.form})","${m.category}","${m.sku}",${m.quantity},"${m.expiryDate}",${m.unitPrice},"${getStatus(m)}"\n`;
+      csvContent += `"${m.name}","${m.form}","${m.category}","${m.sku}",${m.quantity},"${m.expiryDate || 'N/A'}",${m.unitPrice},"${getStatus(m)}"\n`;
     });
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `medflow_inventory_${new Date().toISOString().slice(0,10)}.csv`);
+    link.setAttribute('download', `kho_thuoc_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
+
+
+
   return (
     <div className="space-y-lg text-left">
-      
-      {/* 1. Page Header & Key Vitals */}
+
+      {alertMsg.text && (
+        <div className={`p-3 rounded-xl text-sm font-medium flex items-center gap-2 border ${
+          alertMsg.type === 'success' ? 'bg-green-50 border-green-300 text-green-800 dark:bg-green-950/30 dark:border-green-700 dark:text-green-300' :
+          alertMsg.type === 'error' ? 'bg-red-50 border-red-300 text-red-800 dark:bg-red-950/30 dark:border-red-700 dark:text-red-300' :
+          'bg-blue-50 border-blue-300 text-blue-800 dark:bg-blue-950/30 dark:border-blue-700 dark:text-blue-300'
+        }`}>
+          <span className="material-symbols-outlined text-[18px]">
+            {alertMsg.type === 'success' ? 'check_circle' : alertMsg.type === 'error' ? 'error' : 'info'}
+          </span>
+          {alertMsg.text}
+          <button onClick={() => setAlertMsg({ type: '', text: '' })} className="ml-auto opacity-60 hover:opacity-100">✕</button>
+        </div>
+      )}
+
+
       <div className="flex flex-col sm:flex-row justify-between sm:items-end gap-md mb-lg">
         <div>
           <h2 className="font-headline-xl text-headline-xl text-on-surface dark:text-white mb-xs">{t.title}</h2>
@@ -492,8 +576,8 @@ export default function PharmacistPharmacyTab({ lang = 'vi' }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant dark:divide-slate-700">
-              {filteredMedications.length > 0 ? (
-                filteredMedications.map(med => {
+              {paginatedMedications.length > 0 ? (
+                paginatedMedications.map(med => {
                   const status = getStatus(med);
                   const daysToExpiry = getDaysToExpiry(med.expiryDate);
 
@@ -576,18 +660,26 @@ export default function PharmacistPharmacyTab({ lang = 'vi' }) {
                         )}
                       </td>
                       <td className="px-md py-3 text-right">
-                        <div className="flex justify-end gap-xs opacity-60 hover:opacity-100 transition-opacity">
+                        <div className="flex justify-end gap-xs opacity-70 hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => handleOpenRestockModal(med)}
+                            className="px-2 py-1 bg-teal-600 hover:bg-teal-700 text-white rounded text-[11px] font-bold flex items-center gap-0.5 transition-colors"
+                            title="Nhập kho"
+                          >
+                            <span className="material-symbols-outlined text-[15px]">add_box</span>
+                            Nhập Kho
+                          </button>
                           <button 
                             onClick={() => handleOpenEditModal(med)}
                             className="p-1 hover:text-primary dark:hover:text-primary-fixed-dim hover:bg-surface-container-high dark:hover:bg-slate-800 rounded transition-colors cursor-pointer border-none bg-transparent"
-                            title="Edit"
+                            title="Chỉnh sửa"
                           >
                             <span className="material-symbols-outlined text-[20px]">edit</span>
                           </button>
                           <button 
                             onClick={() => handleDeleteMed(med.id)}
                             className="p-1 hover:text-error dark:hover:text-red-400 hover:bg-surface-container-high dark:hover:bg-slate-800 rounded transition-colors cursor-pointer border-none bg-transparent"
-                            title="Delete"
+                            title="Xóa"
                           >
                             <span className="material-symbols-outlined text-[20px]">delete</span>
                           </button>
@@ -598,8 +690,18 @@ export default function PharmacistPharmacyTab({ lang = 'vi' }) {
                 })
               ) : (
                 <tr>
-                  <td colSpan={8} className="px-md py-8 text-center text-on-surface-variant dark:text-slate-400">
-                    No medications found matching your filter criteria.
+                  <td colSpan={8} className="px-md py-10 text-center">
+                    {isLoading ? (
+                      <div className="flex flex-col items-center gap-2 text-on-surface-variant dark:text-slate-400">
+                        <span className="material-symbols-outlined text-[40px] animate-spin">refresh</span>
+                        <span className="text-sm">Đang tải danh sách thuốc từ CSDL...</span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 text-on-surface-variant dark:text-slate-400">
+                        <span className="material-symbols-outlined text-[40px]">medication</span>
+                        <span className="text-sm">{lang === 'vi' ? 'Không tìm thấy thuốc phù hợp. Bấm "Thêm Thuốc Mới" để bắt đầu nhập kho.' : 'No medications found. Click Add New Medicine to get started.'}</span>
+                      </div>
+                    )}
                   </td>
                 </tr>
               )}
@@ -608,16 +710,70 @@ export default function PharmacistPharmacyTab({ lang = 'vi' }) {
         </div>
 
         {/* Pagination footer */}
-        <div className="px-lg py-sm bg-surface-container-low dark:bg-slate-900 flex justify-between items-center transition-colors">
-          <p className="font-body-sm text-body-sm text-on-surface-variant dark:text-slate-400">
-            {t.showingText.replace('{count}', filteredMedications.length).replace('{total}', medications.length)}
-          </p>
-          <div className="flex items-center gap-base">
-            <button className="p-1 rounded hover:bg-surface-variant dark:hover:bg-slate-800 transition-colors border-none bg-transparent cursor-pointer dark:text-white"><span className="material-symbols-outlined text-[20px]">chevron_left</span></button>
-            <button className="px-3 py-1 bg-primary dark:bg-primary-container text-on-primary dark:text-on-primary-container rounded text-label-md font-label-md border-none cursor-pointer">1</button>
-            <button className="px-3 py-1 hover:bg-surface-variant dark:hover:bg-slate-800 dark:text-slate-300 rounded text-label-md font-label-md border-none bg-transparent cursor-pointer">2</button>
-            <button className="px-3 py-1 hover:bg-surface-variant dark:hover:bg-slate-800 dark:text-slate-300 rounded text-label-md font-label-md border-none bg-transparent cursor-pointer">3</button>
-            <button className="p-1 rounded hover:bg-surface-variant dark:hover:bg-slate-800 transition-colors border-none bg-transparent cursor-pointer dark:text-white"><span className="material-symbols-outlined text-[20px]">chevron_right</span></button>
+        <div className="px-lg py-3 bg-surface-container-low dark:bg-slate-900 flex flex-col sm:flex-row justify-between items-center gap-md transition-colors border-t border-outline-variant/60 dark:border-slate-800">
+          <div className="flex items-center gap-md text-xs text-on-surface-variant dark:text-slate-400">
+            <div className="flex items-center gap-1.5 font-medium">
+              <span>Hiển thị:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 rounded px-2 py-1 text-xs font-bold text-primary dark:text-primary-fixed-dim outline-none cursor-pointer"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={15}>15</option>
+                <option value={20}>20</option>
+              </select>
+            </div>
+            <span>
+              {totalFilteredCount > 0
+                ? `Hiển thị ${startIndex + 1} - ${endIndex} trên tổng số ${totalFilteredCount} sản phẩm`
+                : 'Hiển thị 0 sản phẩm'}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={safeCurrentPage === 1}
+              className="p-1.5 rounded hover:bg-surface-variant dark:hover:bg-slate-800 transition-colors border-none bg-transparent cursor-pointer dark:text-white disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center"
+              title="Trang trước"
+            >
+              <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
+              if (totalPages > 7) {
+                if (pageNum !== 1 && pageNum !== totalPages && Math.abs(pageNum - safeCurrentPage) > 1) {
+                  if (pageNum === 2 && safeCurrentPage > 3) return <span key={pageNum} className="text-xs px-1 text-slate-400">...</span>;
+                  if (pageNum === totalPages - 1 && safeCurrentPage < totalPages - 2) return <span key={pageNum} className="text-xs px-1 text-slate-400">...</span>;
+                  return null;
+                }
+              }
+              const isActive = pageNum === safeCurrentPage;
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`px-3 py-1 rounded text-xs font-bold transition-all border-none cursor-pointer ${
+                    isActive
+                      ? 'bg-primary dark:bg-primary-container text-white dark:text-on-primary-container shadow-xs'
+                      : 'hover:bg-surface-variant dark:hover:bg-slate-800 dark:text-slate-300 bg-transparent'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={safeCurrentPage === totalPages || totalPages === 0}
+              className="p-1.5 rounded hover:bg-surface-variant dark:hover:bg-slate-800 transition-colors border-none bg-transparent cursor-pointer dark:text-white disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center"
+              title="Trang sau"
+            >
+              <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+            </button>
           </div>
         </div>
       </div>
@@ -667,7 +823,7 @@ export default function PharmacistPharmacyTab({ lang = 'vi' }) {
       </div>
 
       {/* 5. Add/Edit Medicine Modal Overlay */}
-      {isModalOpen && (
+      {isModalOpen && modalMode !== 'restock' && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[100] p-md">
           <div className="bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 w-full max-w-lg rounded-xl shadow-2xl overflow-hidden transition-all text-left">
             <div className="px-lg py-md border-b border-outline-variant dark:border-slate-700 bg-surface-container-low dark:bg-slate-900/80 flex justify-between items-center">
@@ -683,6 +839,11 @@ export default function PharmacistPharmacyTab({ lang = 'vi' }) {
             </div>
             
             <form onSubmit={handleSave} className="p-lg space-y-md">
+              {alertMsg.text && (
+                <div className={`p-2 rounded-lg text-xs font-medium border ${
+                  alertMsg.type === 'error' ? 'bg-red-50 border-red-300 text-red-800 dark:bg-red-950/30 dark:border-red-700 dark:text-red-300' : 'bg-green-50 border-green-300 text-green-800'
+                }`}>{alertMsg.text}</div>
+              )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
                 
                 {/* Name */}
@@ -705,7 +866,19 @@ export default function PharmacistPharmacyTab({ lang = 'vi' }) {
                     value={formForm}
                     onChange={(e) => setFormForm(e.target.value)}
                     type="text" 
-                    placeholder="e.g. Capsules (Blister Pack)"
+                    placeholder="Viên nang, Viên nén, Lọ..."
+                    className="w-full bg-surface-container-low dark:bg-slate-900 border border-outline-variant dark:border-slate-700 dark:text-white rounded-lg px-3 py-2 text-body-md focus:ring-2 focus:ring-primary outline-none"
+                  />
+                </div>
+
+                {/* Active Ingredient */}
+                <div className="col-span-2">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant dark:text-slate-400 mb-1">Hoạt chất / Thành phần chính</label>
+                  <input 
+                    value={formActiveIngredient}
+                    onChange={(e) => setFormActiveIngredient(e.target.value)}
+                    type="text" 
+                    placeholder="Amoxicillin, Paracetamol..."
                     className="w-full bg-surface-container-low dark:bg-slate-900 border border-outline-variant dark:border-slate-700 dark:text-white rounded-lg px-3 py-2 text-body-md focus:ring-2 focus:ring-primary outline-none"
                   />
                 </div>
@@ -796,14 +969,101 @@ export default function PharmacistPharmacyTab({ lang = 'vi' }) {
                   type="button"
                   onClick={() => setIsModalOpen(false)}
                   className="px-lg py-2 border border-outline-variant dark:border-slate-700 text-on-surface dark:text-slate-200 rounded-lg font-label-md text-label-md bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                >
+                 >
                   {t.cancel}
                 </button>
                 <button 
                   type="submit"
-                  className="px-lg py-2 bg-primary text-white rounded-lg font-label-md text-label-md hover:brightness-110 shadow-sm transition-all cursor-pointer border-none font-semibold"
+                  disabled={isSaving}
+                  className="px-lg py-2 bg-primary text-white rounded-lg font-label-md text-label-md hover:brightness-110 shadow-sm transition-all cursor-pointer border-none font-semibold disabled:opacity-60 flex items-center gap-2"
                 >
-                  {t.save}
+                  {isSaving && <span className="material-symbols-outlined text-[16px] animate-spin">refresh</span>}
+                  {isSaving ? 'Đang lưu...' : t.save}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Restock Modal */}
+      {isModalOpen && modalMode === 'restock' && currentMed && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[100] p-md">
+          <div className="bg-white dark:bg-slate-800 border border-outline-variant dark:border-slate-700 w-full max-w-md rounded-xl shadow-2xl overflow-hidden text-left">
+            <div className="px-lg py-md border-b border-outline-variant dark:border-slate-700 bg-teal-50 dark:bg-teal-950/40 flex justify-between items-center">
+              <div>
+                <h3 className="font-bold text-teal-800 dark:text-teal-300 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[20px]">add_box</span>
+                  Nhập Kho Thuốc
+                </h3>
+                <p className="text-xs text-teal-700 dark:text-teal-400 mt-0.5">{currentMed.name} — Tồn kho hiện tại: <strong>{currentMed.quantity} {currentMed.form}</strong></p>
+              </div>
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="text-teal-700 dark:text-teal-400 hover:bg-teal-100 dark:hover:bg-teal-900/40 p-1 rounded-full border-none bg-transparent cursor-pointer"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <form onSubmit={handleRestock} className="p-lg space-y-md">
+              {alertMsg.text && (
+                <div className={`p-2 rounded-lg text-xs font-medium border ${
+                  alertMsg.type === 'error' ? 'bg-red-50 border-red-300 text-red-800 dark:bg-red-950/30 dark:border-red-700 dark:text-red-300' : 'bg-green-50 border-green-300 text-green-800'
+                }`}>{alertMsg.text}</div>
+              )}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant dark:text-slate-400 mb-1">Số lượng nhập thêm <span className="text-error">*</span></label>
+                <input 
+                  required
+                  value={restockQty}
+                  onChange={(e) => setRestockQty(e.target.value)}
+                  type="number"
+                  min="1"
+                  placeholder="Ví dụ: 200"
+                  className="w-full bg-surface-container-low dark:bg-slate-900 border border-outline-variant dark:border-slate-700 dark:text-white rounded-lg px-3 py-2 text-body-md focus:ring-2 focus:ring-primary outline-none"
+                />
+                {restockQty && Number(restockQty) > 0 && (
+                  <p className="text-xs text-teal-700 dark:text-teal-400 mt-1 font-medium">
+                    Sau nhập: <strong>{currentMed.quantity + Number(restockQty)} {currentMed.form}</strong>
+                  </p>
+                )}
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant dark:text-slate-400 mb-1">Hạn sử dụng lô mới (tùy chọn)</label>
+                <input 
+                  value={restockExpiry}
+                  onChange={(e) => setRestockExpiry(e.target.value)}
+                  type="date"
+                  className="w-full bg-surface-container-low dark:bg-slate-900 border border-outline-variant dark:border-slate-700 dark:text-white rounded-lg px-3 py-2 text-body-md focus:ring-2 focus:ring-primary outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant dark:text-slate-400 mb-1">Đơn giá nhập mới (VNĐ, tùy chọn)</label>
+                <input 
+                  value={restockPrice}
+                  onChange={(e) => setRestockPrice(e.target.value)}
+                  type="number"
+                  step="1"
+                  min="0"
+                  placeholder="Để trống nếu giữ nguyên"
+                  className="w-full bg-surface-container-low dark:bg-slate-900 border border-outline-variant dark:border-slate-700 dark:text-white rounded-lg px-3 py-2 text-body-md focus:ring-2 focus:ring-primary outline-none"
+                />
+              </div>
+              <div className="flex justify-end gap-md pt-md border-t border-outline-variant dark:border-slate-700">
+                <button 
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-lg py-2 border border-outline-variant dark:border-slate-700 text-on-surface dark:text-slate-200 rounded-lg font-label-md bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  Hủy
+                </button>
+                <button 
+                  type="submit"
+                  disabled={isSaving}
+                  className="px-lg py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-label-md shadow-sm transition-all cursor-pointer border-none font-bold disabled:opacity-60 flex items-center gap-2"
+                >
+                  {isSaving && <span className="material-symbols-outlined text-[16px] animate-spin">refresh</span>}
+                  {isSaving ? 'Đang lưu...' : '✓ Xác Nhận Nhập Kho'}
                 </button>
               </div>
             </form>

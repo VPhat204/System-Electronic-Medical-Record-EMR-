@@ -22,6 +22,8 @@ export default function ReceptionistDashboardTab({
   checkInType,
   setCheckInType,
   handleCheckInSubmit,
+  todayConfirmedAppts = [],
+  handleCheckInAppt,
 }) {
   return (
     <>
@@ -51,6 +53,123 @@ export default function ReceptionistDashboardTab({
           </button>
         </div>
       </div>
+
+      {/* ══ TODAY'S CHECK-IN QUEUE WIDGET ═══════════════════════════════ */}
+      <section className="bg-white dark:bg-slate-800 border border-teal-200 dark:border-teal-800 rounded-xl overflow-hidden shadow-sm">
+        {/* Widget Header */}
+        <div className="px-5 py-4 bg-teal-50 dark:bg-teal-900/30 border-b border-teal-200 dark:border-teal-800 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <span className="material-symbols-outlined text-teal-600 dark:text-teal-400 text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>how_to_reg</span>
+            <div>
+              <h3 className="font-bold text-teal-800 dark:text-teal-200 text-sm">
+                {lang === 'vi' ? 'Hàng Đợi Check-in Hôm Nay' : "Today's Check-in Queue"}
+              </h3>
+              <p className="text-teal-600 dark:text-teal-400 text-[11px]">
+                {lang === 'vi' ? 'Lịch hẹn đã xác nhận, chờ bệnh nhân đến tiếp nhận' : 'Confirmed appointments awaiting patient arrival'}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {todayConfirmedAppts.length > 0 && (
+              <span className="bg-teal-600 text-white text-xs font-bold px-2.5 py-1 rounded-full">
+                {todayConfirmedAppts.length} {lang === 'vi' ? 'chờ' : 'pending'}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Widget Body */}
+        {todayConfirmedAppts.length === 0 ? (
+          <div className="py-8 flex flex-col items-center justify-center text-center">
+            <span className="material-symbols-outlined text-[40px] text-teal-300 dark:text-teal-700 mb-2">event_available</span>
+            <p className="text-sm text-on-surface-variant dark:text-slate-400">
+              {lang === 'vi' ? 'Không có lịch hẹn nào cần check-in hôm nay.' : 'No appointments pending check-in for today.'}
+            </p>
+            <p className="text-xs text-on-surface-variant/60 dark:text-slate-500 mt-1">
+              {lang === 'vi' ? 'Lịch hẹn sau khi xác nhận sẽ xuất hiện ở đây.' : 'Appointments will appear here once confirmed.'}
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead className="bg-teal-50/60 dark:bg-teal-950/20 border-b border-teal-100 dark:border-teal-900">
+                <tr>
+                  <th className="px-4 py-2.5 text-[11px] font-bold text-teal-700 dark:text-teal-300 uppercase tracking-wider">
+                    {lang === 'vi' ? 'Bệnh nhân' : 'Patient'}
+                  </th>
+                  <th className="px-4 py-2.5 text-[11px] font-bold text-teal-700 dark:text-teal-300 uppercase tracking-wider hidden sm:table-cell">
+                    {lang === 'vi' ? 'Giờ khám' : 'Appt. Time'}
+                  </th>
+                  <th className="px-4 py-2.5 text-[11px] font-bold text-teal-700 dark:text-teal-300 uppercase tracking-wider hidden md:table-cell">
+                    {lang === 'vi' ? 'Bác sĩ' : 'Doctor'}
+                  </th>
+                  <th className="px-4 py-2.5 text-[11px] font-bold text-teal-700 dark:text-teal-300 uppercase tracking-wider hidden md:table-cell">
+                    {lang === 'vi' ? 'Lý do khám' : 'Reason'}
+                  </th>
+                  <th className="px-4 py-2.5 text-[11px] font-bold text-teal-700 dark:text-teal-300 uppercase tracking-wider">
+                    {lang === 'vi' ? 'Trạng thái' : 'Status'}
+                  </th>
+                  <th className="px-4 py-2.5 text-[11px] font-bold text-teal-700 dark:text-teal-300 uppercase tracking-wider text-right">
+                    {lang === 'vi' ? 'Hành động' : 'Action'}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-teal-50 dark:divide-teal-950/30">
+                {todayConfirmedAppts.map((appt) => (
+                  <tr key={appt.id} className="hover:bg-teal-50/40 dark:hover:bg-teal-950/10 transition-colors">
+                    {/* Avatar + Name */}
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-teal-100 dark:bg-teal-900 flex items-center justify-center flex-shrink-0">
+                          <span className="text-xs font-bold text-teal-700 dark:text-teal-300">
+                            {appt.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm text-on-surface dark:text-white">{appt.name}</p>
+                          {appt.phone && <p className="text-[11px] text-on-surface-variant dark:text-slate-400">{appt.phone}</p>}
+                        </div>
+                      </div>
+                    </td>
+                    {/* Time */}
+                    <td className="px-4 py-3 hidden sm:table-cell">
+                      <span className="text-sm font-semibold text-on-surface dark:text-white">{appt.time}</span>
+                    </td>
+                    {/* Doctor */}
+                    <td className="px-4 py-3 text-sm text-on-surface-variant dark:text-slate-400 hidden md:table-cell">
+                      {appt.doctor}
+                    </td>
+                    {/* Reason */}
+                    <td className="px-4 py-3 hidden md:table-cell">
+                      <span className="text-xs bg-surface-container-high dark:bg-slate-700 text-on-surface-variant dark:text-slate-300 px-2 py-0.5 rounded-full">
+                        {appt.type}
+                      </span>
+                    </td>
+                    {/* Status badge */}
+                    <td className="px-4 py-3">
+                      <span className="flex items-center gap-1.5 text-[11px] font-bold text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 px-2 py-0.5 rounded-full w-fit">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                        {lang === 'vi' ? 'Đã xác nhận' : 'Confirmed'}
+                      </span>
+                    </td>
+                    {/* Check-in Button */}
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        id={`checkin-btn-${appt.id}`}
+                        onClick={() => handleCheckInAppt(appt.id)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-lg transition-all active:scale-95 shadow-sm ml-auto"
+                      >
+                        <span className="material-symbols-outlined text-[14px]">how_to_reg</span>
+                        {lang === 'vi' ? 'Check-in' : 'Check In'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
       {/* Bento Grid Panel Layout */}
       <div className="grid grid-cols-12 gap-gutter">

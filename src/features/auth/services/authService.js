@@ -95,6 +95,36 @@ const authService = {
       throw new Error(data.message || 'Gửi lại mã OTP thất bại');
     }
     return data;
+  },
+
+  getProfile: async (token) => {
+    const response = await fetch(`${API_URL}/profile`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || 'Không thể lấy thông tin profile');
+    }
+    return data;
+  },
+
+  updateProfile: async (token, profileData) => {
+    const response = await fetch(`${API_URL}/profile`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(profileData)
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || 'Cập nhật profile thất bại');
+    }
+    return data;
   }
 };
 

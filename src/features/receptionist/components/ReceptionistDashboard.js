@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { AuthContext } from '../../auth/context/AuthContext';
+import { ToastContext } from '../../../shared/context/ToastContext';
+import appointmentService from '../../appointments/services/appointmentService';
 import ReceptionistDashboardTab from '../pages/Dashboard/ReceptionistDashboardTab';
 import ReceptionistPatientsTab from '../pages/Patients/ReceptionistPatientsTab';
 import ReceptionistAppointmentsTab from '../pages/Appointments/ReceptionistAppointmentsTab';
@@ -477,6 +480,8 @@ const initialInvoices = [
 ];
 
 export default function ReceptionistDashboard({ onNavigate, theme: propTheme, setTheme: propSetTheme, lang: propLang, setLang: propSetLang }) {
+  const { token } = useContext(AuthContext);
+  const { success: toastSuccess, error: toastError, warning: toastWarning, info: toastInfo } = useContext(ToastContext);
   const [localLang, setLocalLang] = useState('vi');
   const lang = propLang !== undefined ? propLang : localLang;
   const setLang = propSetLang !== undefined ? propSetLang : setLocalLang;
@@ -486,7 +491,9 @@ export default function ReceptionistDashboard({ onNavigate, theme: propTheme, se
   const currentTheme = propTheme !== undefined ? propTheme : localTheme;
   const isDark = currentTheme === 'dark';
 
-  const [activeTab, setActiveTab] = useState('Settings'); // Default to Settings as requested!
+  const [activeTab, setActiveTab] = useState('Dashboard');
+  const [dbDoctors, setDbDoctors] = useState([]);
+  const [dbDepartments, setDbDepartments] = useState([]);
 
   // Receptionist States
   const [queue, setQueue] = useState(initialQueue);
@@ -499,12 +506,78 @@ export default function ReceptionistDashboard({ onNavigate, theme: propTheme, se
   const [insuranceFilter, setInsuranceFilter] = useState('Tất cả bảo hiểm');
 
   // Appointments Directory States
-  const [appointments, setAppointments] = useState(initialAppointments);
+  const [appointments, setAppointments] = useState([]);
   const [apptView, setApptView] = useState('day'); // 'day' | 'week' | 'month' | 'year'
-  const [selectedDate, setSelectedDate] = useState(() => new Date('2024-05-24'));
-  const [apptWaiting, setApptWaiting] = useState(12);
-  const [apptInRoom, setApptInRoom] = useState(5);
-  const [apptCompleted, setApptCompleted] = useState(28);
+  const [selectedDate, setSelectedDate] = useState(() => new Date());
+  const [apptWaiting, setApptWaiting] = useState(0);
+  const [apptInRoom, setApptInRoom] = useState(0);
+  const [apptCompleted, setApptCompleted] = useState(0);
+
+  const loadAllAppointments = async () => {
+    if (!token) return;
+    try {
+      const response = await appointmentService.getAllAppointments(token);
+      const dbAppts = response.appointments || [];
+      const mappedAppts = dbAppts.map((appt) => {
+        let displayStatus = 'Đang chờ';
+        if (appt.status === 'CHECKED_IN') displayStatus = 'Đã check-in';
+        else if (appt.status === 'IN_PROGRESS') displayStatus = 'Đang khám';
+        else if (appt.status === 'COMPLETED') displayStatus = 'Hoàn tất';
+        else if (appt.status === 'CANCELLED') displayStatus = 'Đã hủy';
+        else if (appt.status === 'CONFIRMED') displayStatus = 'Đã xác nhận';
+
+        return {
+          id: appt.id,
+          name: appt.patient?.fullName || 'Bệnh nhân ẩn danh',
+          phone: appt.patient?.phone || '',
+          time: appt.appointmentTime,
+          date: appt.appointmentDate,
+          type: appt.symptoms || 'Khám bệnh',
+          doctor: appt.doctor?.fullName ? `BS. ${appt.doctor.fullName}` : 'Chưa gán',
+          status: displayStatus,
+          priority: false,
+          durationMins: 30,
+          rawStatus: appt.status
+        };
+      });
+      setAppointments(mappedAppts);
+
+      setApptWaiting(mappedAppts.filter(a => a.rawStatus === 'PENDING').length);
+      setApptInRoom(mappedAppts.filter(a => a.rawStatus === 'CHECKED_IN' || a.rawStatus === 'IN_PROGRESS').length);
+      setApptCompleted(mappedAppts.filter(a => a.rawStatus === 'COMPLETED').length);
+    } catch (err) {
+      console.error('Failed to load appointments:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (token) {
+      loadAllAppointments();
+      
+      const loadLookup = async () => {
+        try {
+          const data = await appointmentService.getBookingData(token);
+          setDbDepartments(data.departments || []);
+          setDbDoctors(data.doctors || []);
+          const mappedDocs = (data.doctors || []).map(doc => ({
+            id: doc.id,
+            name: `BS. ${doc.name}`,
+            clinic: `Phòng khám - ${doc.departmentName || 'Chung'}`,
+            status: 'Trống',
+            statusEn: 'Available',
+            avatar: null
+          }));
+          setDoctorsList(mappedDocs);
+          if (mappedDocs.length > 0) {
+            setApptForm(f => ({ ...f, doctor: mappedDocs[0].name }));
+          }
+        } catch (err) {
+          console.error('Failed to load lookup data for receptionist:', err);
+        }
+      };
+      loadLookup();
+    }
+  }, [token]);
 
   const [doctorsList, setDoctorsList] = useState([
     { id: 301, name: 'BS. Trần Hùng', clinic: 'Phòng 102 - Nội tổng quát', status: 'Trống', statusEn: 'Available', avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCtWr4DtmR8B0_in-_gqoKoZVzPdHwgxOleFY_FKFj_wErPD6UsQQqs6ZJw0QdiIoDJYQ_2mCa4dsKrZ3q6b1B2LlP4_ySXqj2BuRPZy1UG3SMtAK1hgxGJPUTYE0t0MddfC2sT-A6WWGOMintZelgmuI-VNTxbHfHm20n86USjV9ylra6OtdGybma8CS0KSegsXALWLV18QNiDhl7FioTutX6vn6gWU7zUNEeABBzoRjMZbBTIJakb' },
@@ -613,7 +686,7 @@ export default function ReceptionistDashboard({ onNavigate, theme: propTheme, se
   const handleCheckInSubmit = (e) => {
     e.preventDefault();
     if (!checkInName.trim()) {
-      alert(lang === 'vi' ? 'Vui lòng nhập tên bệnh nhân!' : 'Please enter patient name!');
+      toastWarning(lang === 'vi' ? 'Vui lòng nhập tên bệnh nhân!' : 'Please enter patient name!');
       return;
     }
 
@@ -629,7 +702,7 @@ export default function ReceptionistDashboard({ onNavigate, theme: propTheme, se
     setQueue([...queue, newPat]);
     setCheckinsTodayCount(prev => prev + 1);
     setCheckInName('');
-    alert(lang === 'vi' ? `Tiếp đón bệnh nhân ${checkInName} thành công! Đã thêm vào hàng đợi.` : `Successfully checked in ${checkInName}! Added to wait queue.`);
+    toastSuccess(lang === 'vi' ? `Tiếp đón bệnh nhân ${checkInName} thành công! Đã thêm vào hàng đợi.` : `Successfully checked in ${checkInName}! Added to wait queue.`);
   };
 
   // Check-in a patient from the patient registry list directly
@@ -637,7 +710,7 @@ export default function ReceptionistDashboard({ onNavigate, theme: propTheme, se
     // Check if patient already in queue
     const exists = queue.some(q => q.mrn === pat.mrn);
     if (exists) {
-      alert(t.alreadyInQueue);
+      toastWarning(t.alreadyInQueue);
       return;
     }
 
@@ -655,21 +728,21 @@ export default function ReceptionistDashboard({ onNavigate, theme: propTheme, se
 
     // Replace text placeholders with actual values
     const msg = t.checkInSuccessPat.replace('{name}', pat.name);
-    alert(msg);
+    toastSuccess(msg);
   };
 
   const handleVerifyInsurance = (provider) => {
     if (provider === 'Anthem') {
       setAnthemVerified(true);
       setUnverifiedInsurance(prev => Math.max(0, prev - 1));
-      alert(lang === 'vi' ? 'Đã xác thực bảo hiểm Anthem thành công!' : 'Anthem insurance successfully verified!');
+      toastSuccess(lang === 'vi' ? 'Đã xác thực bảo hiểm Anthem thành công!' : 'Anthem insurance successfully verified!');
     }
   };
 
   const handleAppealInsurance = (provider) => {
     if (provider === 'United') {
       setUnitedAppealed(true);
-      alert(lang === 'vi' ? 'Đã gửi khiếu nại bảo hiểm United HealthCare!' : 'United HealthCare insurance appeal submitted!');
+      toastSuccess(lang === 'vi' ? 'Đã gửi khiếu nại bảo hiểm United HealthCare!' : 'United HealthCare insurance appeal submitted!');
     }
   };
 
@@ -689,7 +762,7 @@ export default function ReceptionistDashboard({ onNavigate, theme: propTheme, se
     // Remove patient from waiting queue
     setQueue(prev => prev.filter(p => p.id !== patientId));
     setAssigningPatient(null);
-    alert(lang === 'vi' ? `Gán giường bệnh ${bedId} thành công cho ${patObj.name}!` : `Successfully assigned bed ${bedId} to ${patObj.name}!`);
+    toastSuccess(lang === 'vi' ? `Gán giường bệnh ${bedId} thành công cho ${patObj.name}!` : `Successfully assigned bed ${bedId} to ${patObj.name}!`);
   };
 
   // Cycle Bed Status manually by clicking
@@ -717,7 +790,7 @@ export default function ReceptionistDashboard({ onNavigate, theme: propTheme, se
     const amt = prompt(lang === 'vi' ? 'Nhập số tiền thanh toán (VNĐ):' : 'Enter billing payment amount ($):');
     if (!amt) return;
     setPendingBills(prev => Math.max(0, prev - 1));
-    alert(lang === 'vi' ? 'Thanh toán hóa đơn viện phí thành công!' : 'Billing payment processed successfully!');
+    toastSuccess(lang === 'vi' ? 'Thanh toán hóa đơn viện phí thành công!' : 'Billing payment processed successfully!');
   };
 
   const handleEmergencyCheckIn = () => {
@@ -735,13 +808,13 @@ export default function ReceptionistDashboard({ onNavigate, theme: propTheme, se
 
     setQueue([newPat, ...queue]);
     setCheckinsTodayCount(prev => prev + 1);
-    alert(lang === 'vi' ? 'Đã kích hoạt tiếp nhận STAT! Bệnh nhân được ưu tiên hàng đầu.' : 'STAT Admission triggered! Patient placed at the front of the queue.');
+    toastSuccess(lang === 'vi' ? 'Đã kích hoạt tiếp nhận STAT! Bệnh nhân được ưu tiên hàng đầu.' : 'STAT Admission triggered! Patient placed at the front of the queue.');
   };
 
   const handleAddPatientSubmit = (e) => {
     e.preventDefault();
     if (!newPatientForm.name.trim() || !newPatientForm.age || !newPatientForm.phone) {
-      alert(lang === 'vi' ? 'Vui lòng điền đầy đủ các trường thông tin bắt buộc!' : 'Please fill all required fields!');
+      toastWarning(lang === 'vi' ? 'Vui lòng điền đầy đủ các trường thông tin bắt buộc!' : 'Please fill all required fields!');
       return;
     }
 
@@ -847,42 +920,40 @@ export default function ReceptionistDashboard({ onNavigate, theme: propTheme, se
     return apptDate.getFullYear() === selectedDate.getFullYear();
   }).filter(appt => appt.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
-  const handleBookingConfirmSubmit = (e) => {
+  const handleBookingConfirmSubmit = async (e) => {
     e.preventDefault();
     if (!apptForm.name.trim() || !apptForm.phone) {
       alert(lang === 'vi' ? 'Vui lòng điền họ tên và số điện thoại!' : 'Please enter patient name and phone number!');
       return;
     }
 
-    const docObj = doctorsList.find(d => d.name === apptForm.doctor);
-    const specialtyStr = docObj ? docObj.clinic.split(' - ')[1] : 'Nội tổng quát';
+    const matchedDoc = dbDoctors.find(d => `BS. ${d.name}` === apptForm.doctor);
+    const doctorId = matchedDoc ? matchedDoc.id : null;
+    const departmentId = matchedDoc ? matchedDoc.departmentId : null;
 
-    const newAppt = {
-      id: Date.now(),
-      name: apptForm.name.trim(),
-      time: apptForm.time,
-      date: apptForm.date || toDateKey(selectedDate),
-      type: specialtyStr,
-      doctor: apptForm.doctor,
-      status: 'Đang chờ',
-      priority: false,
-      durationMins: 45
-    };
+    try {
+      await appointmentService.createAppointment(token, {
+        doctorId,
+        departmentId,
+        appointmentDate: apptForm.date || toDateKey(selectedDate),
+        appointmentTime: apptForm.time,
+        symptoms: `Đăng ký khám quầy Lễ tân - Bác sĩ ${matchedDoc?.name || 'Chung'}`,
+        hasInsurance: apptForm.patientType === 'insurance',
+        patientPhone: apptForm.phone
+      });
 
-    setAppointments([...appointments, newAppt]);
-    setApptWaiting(prev => prev + 1);
+      alert(lang === 'vi' ? 'Đặt lịch hẹn khám bệnh thành công!' : 'Appointment booked successfully!');
+      
+      setApptForm(prev => ({
+        ...prev,
+        name: '',
+        phone: ''
+      }));
 
-    // Reset form fields
-    setApptForm({
-      patientType: 'new',
-      name: '',
-      phone: '',
-      date: '2024-05-24',
-      time: '08:00',
-      doctor: 'BS. Trần Hùng'
-    });
-
-    alert(lang === 'vi' ? 'Đặt lịch hẹn khám bệnh thành công!' : 'Appointment booked successfully!');
+      await loadAllAppointments();
+    } catch (err) {
+      alert(err.message || 'Lỗi khi đăng ký đặt lịch khám.');
+    }
   };
 
   // Filter patients list
@@ -903,49 +974,74 @@ export default function ReceptionistDashboard({ onNavigate, theme: propTheme, se
     return matchesSearch && p.insurance === filterKey;
   });
 
-  // Cycle appointment status on card click
-  const handleToggleApptStatus = (apptId) => {
-    setAppointments(prev => prev.map(a => {
-      if (a.id === apptId) {
-        let nextStatus = 'Đang chờ';
-        if (a.status === 'Đang chờ') {
-          nextStatus = 'Đã check-in';
-          const newQueueItem = {
-            id: Date.now(),
-            name: a.name,
-            mrn: `#BN-${Math.floor(1000 + Math.random() * 9000)}-Q`,
-            department: a.type,
-            waitTime: '5 mins',
-            status: 'Checking In'
-          };
-          setQueue(q => [...q, newQueueItem]);
-          setCheckinsTodayCount(c => c + 1);
-          setApptWaiting(w => Math.max(0, w - 1));
-          setApptInRoom(r => r + 1);
-          alert(lang === 'vi' ? `Đã xác nhận check-in và đưa ${a.name} vào hàng đợi tiếp đón!` : `Check-in confirmed and ${a.name} added to wait queue!`);
-        } else if (a.status === 'Đã check-in') {
-          nextStatus = 'Hoàn tất';
-          setApptInRoom(r => Math.max(0, r - 1));
-          setApptCompleted(c => c + 1);
-        } else if (a.status === 'Ưu tiên') {
-          nextStatus = 'Đã check-in';
-          const newQueueItem = {
-            id: Date.now(),
-            name: a.name,
-            mrn: `#BN-${Math.floor(1000 + Math.random() * 9000)}-Q`,
-            department: a.type,
-            waitTime: '0 mins',
-            status: 'Delayed'
-          };
-          setQueue(q => [newQueueItem, ...q]);
-          setCheckinsTodayCount(c => c + 1);
-          setApptInRoom(r => r + 1);
-        }
-        return { ...a, status: nextStatus };
-      }
-      return a;
-    }));
+  // ── Confirm a PENDING appointment → CONFIRMED ───────────────────────────
+  const handleConfirmAppt = async (apptId) => {
+    const appt = appointments.find(a => a.id === apptId);
+    if (!appt || appt.rawStatus !== 'PENDING') return;
+    try {
+      await appointmentService.updateAppointmentStatus(token, apptId, 'CONFIRMED');
+      toastSuccess(
+        lang === 'vi'
+          ? `Đã xác nhận lịch hẹn cho ${appt.name}!`
+          : `Appointment confirmed for ${appt.name}!`
+      );
+      await loadAllAppointments();
+    } catch (err) {
+      toastError(err.message || 'Xác nhận lịch hẹn thất bại.');
+    }
   };
+
+  // ── Check-in a CONFIRMED appointment → CHECKED_IN ────────────────────────
+  const handleCheckInAppt = async (apptId) => {
+    const appt = appointments.find(a => a.id === apptId);
+    if (!appt || appt.rawStatus !== 'CONFIRMED') return;
+    try {
+      await appointmentService.updateAppointmentStatus(token, apptId, 'CHECKED_IN');
+      // Add to real-time waiting queue
+      const newQueueItem = {
+        id: Date.now(),
+        name: appt.name,
+        mrn: `#BN-${Math.floor(1000 + Math.random() * 9000)}-Q`,
+        department: appt.type,
+        waitTime: '0 phút',
+        status: 'Checking In'
+      };
+      setQueue(q => [...q, newQueueItem]);
+      setCheckinsTodayCount(c => c + 1);
+      toastSuccess(
+        lang === 'vi'
+          ? `✅ Check-in thành công! ${appt.name} đã vào hàng đợi chờ khám.`
+          : `✅ Checked in! ${appt.name} added to the waiting queue.`
+      );
+      await loadAllAppointments();
+    } catch (err) {
+      toastError(err.message || 'Check-in thất bại.');
+    }
+  };
+
+  // ── Cancel any non-terminal appointment ──────────────────────────────────
+  const handleToggleApptStatus = async (apptId) => {
+    const appt = appointments.find(a => a.id === apptId);
+    if (!appt) return;
+    if (appt.rawStatus === 'COMPLETED' || appt.rawStatus === 'CANCELLED') return;
+    const confirmCancel = window.confirm(
+      lang === 'vi' ? 'Bạn có muốn hủy lịch hẹn khám này không?' : 'Do you want to cancel this appointment?'
+    );
+    if (!confirmCancel) return;
+    try {
+      await appointmentService.updateAppointmentStatus(token, apptId, 'CANCELLED');
+      toastSuccess(lang === 'vi' ? 'Đã hủy lịch hẹn.' : 'Appointment cancelled.');
+      await loadAllAppointments();
+    } catch (err) {
+      toastError(err.message || 'Hủy lịch hẹn thất bại.');
+    }
+  };
+
+  // ── Appointments waiting for check-in today (CONFIRMED + today's date) ───
+  const todayKey = toDateKey(new Date());
+  const todayConfirmedAppts = appointments.filter(
+    a => a.rawStatus === 'CONFIRMED' && a.date === todayKey
+  );
 
   // Toggle Doctor's availability status
   const handleToggleDoctorStatus = (docId) => {
@@ -996,7 +1092,7 @@ export default function ReceptionistDashboard({ onNavigate, theme: propTheme, se
     };
     setRecentTransactions([logItem, ...recentTransactions]);
 
-    alert(lang === 'vi' ? `Đã ghi nhận thanh toán thành công cho hóa đơn ${selectedInvoice.mrn}!` : `Successfully recorded payment for invoice ${selectedInvoice.mrn}!`);
+    toastSuccess(lang === 'vi' ? `Đã ghi nhận thanh toán thành công cho hóa đơn ${selectedInvoice.mrn}!` : `Successfully recorded payment for invoice ${selectedInvoice.mrn}!`);
     setSelectedInvoice(null);
   };
 
@@ -1006,17 +1102,17 @@ export default function ReceptionistDashboard({ onNavigate, theme: propTheme, se
 
     if (code.toUpperCase() === 'GIAM20') {
       setDiscountPercent('20%');
-      alert(lang === 'vi' ? 'Áp dụng mã giảm giá 20% thành công!' : 'Successfully applied 20% discount code!');
+      toastSuccess(lang === 'vi' ? 'Áp dụng mã giảm giá 20% thành công!' : 'Successfully applied 20% discount code!');
     } else if (code.toUpperCase() === 'GIAM50') {
       setDiscountPercent('50%');
-      alert(lang === 'vi' ? 'Áp dụng mã giảm giá 50% thành công!' : 'Successfully applied 50% discount code!');
+      toastSuccess(lang === 'vi' ? 'Áp dụng mã giảm giá 50% thành công!' : 'Successfully applied 50% discount code!');
     } else {
-      alert(lang === 'vi' ? 'Mã giảm giá không hợp lệ!' : 'Invalid discount code!');
+      toastError(lang === 'vi' ? 'Mã giảm giá không hợp lệ!' : 'Invalid discount code!');
     }
   };
 
   const handlePrintVATInvoiceLog = (logId) => {
-    alert(t.printVATSuccess);
+    toastSuccess(t.printVATSuccess);
   };
 
   // Filter invoices table
@@ -1044,7 +1140,7 @@ export default function ReceptionistDashboard({ onNavigate, theme: propTheme, se
   };
 
   const handleSaveChangesSettings = () => {
-    alert(t.saveSuccessMsg);
+    toastSuccess(t.saveSuccessMsg);
   };
 
   const handleCancelSettings = () => {
@@ -1057,7 +1153,7 @@ export default function ReceptionistDashboard({ onNavigate, theme: propTheme, se
       autoRefreshQueue: true,
       soundChimeNotification: false
     });
-    alert(lang === 'vi' ? 'Đã hoàn tác các thay đổi chưa lưu!' : 'Discarded unsaved setting modifications!');
+    toastInfo(lang === 'vi' ? 'Đã hoàn tác các thay đổi chưa lưu!' : 'Discarded unsaved setting modifications!');
   };
 
   return (
@@ -1140,7 +1236,7 @@ export default function ReceptionistDashboard({ onNavigate, theme: propTheme, se
             </button>
 
             <button
-              onClick={() => onNavigate('home')}
+              onClick={() => onNavigate('home', true)}
               className="w-full flex items-center gap-3 px-2 py-2 text-error hover:bg-error-container/20 rounded-md transition-colors"
             >
               <span className="material-symbols-outlined">logout</span>
@@ -1259,6 +1355,8 @@ export default function ReceptionistDashboard({ onNavigate, theme: propTheme, se
               checkInType={checkInType}
               setCheckInType={setCheckInType}
               handleCheckInSubmit={handleCheckInSubmit}
+              todayConfirmedAppts={todayConfirmedAppts}
+              handleCheckInAppt={handleCheckInAppt}
             />
           )}
 
@@ -1291,6 +1389,8 @@ export default function ReceptionistDashboard({ onNavigate, theme: propTheme, se
               appointments={appointments}
               visibleAppointments={visibleAppointments}
               handleToggleApptStatus={handleToggleApptStatus}
+              handleConfirmAppt={handleConfirmAppt}
+              handleCheckInAppt={handleCheckInAppt}
               calculateTopOffset={calculateTopOffset}
               apptWaiting={apptWaiting}
               apptInRoom={apptInRoom}

@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { LanguageContext } from '../../../../shared/context/LanguageContext';
+import { AuthContext } from '../../../auth/context/AuthContext';
+import { ToastContext } from '../../../../shared/context/ToastContext';
 
 export default function BlogsPage({ onNavigate }) {
+  const { user } = useContext(AuthContext);
   const { t, lang } = useContext(LanguageContext);
+  const { success: toastSuccess, warning: toastWarning, info: toastInfo } = useContext(ToastContext);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [email, setEmail] = useState('');
@@ -50,8 +54,12 @@ export default function BlogsPage({ onNavigate }) {
 
   const handleSubmitNewsletter = (e) => {
     e.preventDefault();
+    if (!user) {
+      toastWarning(lang === 'vi' ? 'Vui lòng đăng nhập trước khi thực hiện thao tác này!' : 'Please log in before performing this action!');
+      return;
+    }
     if (email) {
-      alert(lang === 'vi' ? `Đăng ký thành công bản tin sức khỏe cho email: ${email}` : `Successfully subscribed to wellness newsletter for email: ${email}`);
+      toastSuccess(lang === 'vi' ? `Đăng ký thành công bản tin sức khỏe cho email: ${email}` : `Successfully subscribed to wellness newsletter for email: ${email}`);
       setEmail('');
     }
   };
@@ -86,7 +94,13 @@ export default function BlogsPage({ onNavigate }) {
               {t('blogs.featured.desc')}
             </p>
             <button 
-              onClick={() => alert(t('blogs.featured.title'))}
+              onClick={() => {
+                if (!user) {
+                  toastWarning(lang === 'vi' ? 'Vui lòng đăng nhập trước khi thực hiện thao tác này!' : 'Please log in before performing this action!');
+                  return;
+                }
+                toastInfo(t('blogs.featured.title'));
+              }}
               className="inline-flex items-center gap-xs bg-white text-primary px-md py-sm rounded-lg font-label-md text-label-md hover:bg-primary-fixed-dim transition-colors cursor-pointer"
             >
               {t('blogs.readMore')}
@@ -164,7 +178,13 @@ export default function BlogsPage({ onNavigate }) {
                     </p>
                   </div>
                   <button 
-                    onClick={() => alert(`${article.title}`)}
+                    onClick={() => {
+                      if (!user) {
+                        toastWarning(lang === 'vi' ? 'Vui lòng đăng nhập trước khi thực hiện thao tác này!' : 'Please log in before performing this action!');
+                        return;
+                      }
+                      toastInfo(`${article.title}`);
+                    }}
                     className="text-primary dark:text-sky-400 font-label-md text-label-md flex items-center gap-xs hover:underline text-left cursor-pointer w-fit"
                   >
                     {t('blogs.readMore')} <span className="material-symbols-outlined text-[16px]">open_in_new</span>

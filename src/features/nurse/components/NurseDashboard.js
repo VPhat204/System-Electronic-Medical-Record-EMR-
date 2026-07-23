@@ -651,7 +651,7 @@ export default function NurseDashboard({ onNavigate, theme: propTheme, setTheme:
               <span className="font-label-md text-label-md">{t.helpCenter}</span>
             </button>
             <button
-              onClick={() => onNavigate('home')}
+              onClick={() => onNavigate('home', true)}
               className="w-full flex items-center gap-3 px-2 py-2 text-error hover:bg-error-container/20 rounded-md transition-colors border-none bg-transparent cursor-pointer"
             >
               <span className="material-symbols-outlined">logout</span>
